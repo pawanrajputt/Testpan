@@ -1,0 +1,44 @@
+<?php 
+
+include_once 'connect.php';
+include_once 'headersfunction.php';
+
+if(isset($_REQUEST['user_id']) && !empty($_REQUEST['user_id']) && !empty($_REQUEST['mpin']))
+
+{
+		$user_id = mysqli_real_escape_string($conn,$_REQUEST['user_id']);
+		$mpin = mysqli_real_escape_string($conn,$_REQUEST['mpin']);
+
+	    $querySql = "UPDATE tt_admin_users SET mpin='".$mpin."' where id='".$user_id."'";
+		$queryRun = mysqli_multi_query($conn, $querySql); 
+				
+		$usermsg='1';
+}
+else
+{
+        $usermsg='0';
+    
+		
+}
+	
+        if($usermsg==1)
+		{
+			$data = array(
+					'success' => 1,
+					'user_id' => $user_id,
+					'message' => 'Your Mpin Created Successfully',
+					'app_message' => 'Your Mpin Created Successfully'
+				);
+		}
+		if($usermsg==0)
+		{
+			$data = array(
+				'success' => 0,
+				'message' => 'Enter your 4 Digit Mpin',
+				'app_message' => 'Enter your 4 Digit Mpin'
+			);
+		}
+echo json_encode($data);
+ 
+
+?>

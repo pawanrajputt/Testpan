@@ -1,0 +1,67 @@
+<?php 
+include('header.php');
+//include_once("db_connect.php");
+?>
+<title>BMTC</title>
+<script type="text/javascript" src="script/validation.min.js"></script>
+<script type="text/javascript" src="script/register.js"></script>
+<link href="css/style.css" rel="stylesheet" type="text/css" media="screen">
+<?php include('container.php');?>
+
+<div class="container">
+	
+	
+	<div class="register_container">
+	<h3 class="form-signin-heading" align="center">PAYMENT POLICY</h3><hr />
+	<div id="error">
+	</div>
+    
+    <div class="form-group col-12 col-lg-12">
+    <label style="font-size:15px; color:#333">   
+	The access is currently made available to you for your personal, non-commercial use, free of charge. We do not guarantee that the access to platform or any content will be free always. </label>
+	</div>
+    
+     <div class="form-group col-12 col-lg-12">
+    <label style="font-size:15px; color:#333">
+
+<p><h3>In case of paid subscription:</h3></p>
+
+<p>You must provide one or more payment methods to use the Testpan service. You authorize us to charge any payment method associated to your account in case your primary payment method is declined or no longer available to us for payment of your subscription fee.</p>
+
+<p>If the payment is not successful due to the expiration or insufficient amount or otherwise or you do not cancel your account then we may suspend your access to the service until we are successfully charged a valid payment method. Local tax charges may vary depending on the Payment Method used. Check with your Payment Method service provider for details.</p>
+
+<p>Testpan shall not be liable in any manner with respect to any loss or damage incurred directly or indirectly due to decline of authorization for any Transaction, on Account of the Cardholder having exceeded the preset limit mutually agreed by Testpan with participant bank from time to time.</p>
+
+<p>You must not misuse the Application by knowingly introducing viruses, Trojans or any other material which is malicious or technologically harmful.</p>
+
+
+
+</span>
+<br />
+<p><h3>Changes in Payment Policy </h3> </p>
+
+<p>Testpan may at its sole discretion update the payment policy at any time. You are required to visit the page persistently for the change in payment policy and go through the payment policy before making any payment. </p>
+
+
+
+    <hr />
+    
+	<div style="clear:both;"></div>
+      <div class="form-group col-12 col-lg-12">  
+    <label style="font-size:15px; color:#333"></label> <br />
+	<span style="color:#003"><a href="https://bookmytestcenter.com/" class="btn">Click here to Sign-in</a> </span>
+	</div>
+	
+	
+	</div>
+	</div>	
+	</div>		
+<?php include('footer.php');?>
+<script>
+function isNumberKey(evt){
+    var charCode = (evt.which) ? evt.which : event.keyCode
+    if (charCode > 31 && (charCode < 48 || charCode > 57))
+        return false;
+    return true;
+}
+</script>

@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /login/
+Disallow: /register/
+Disallow: /checkout/
+Disallow: /cart/
+Disallow: /search/
+Disallow: /private/
+Disallow: /tmp/
+Disallow: /cdn/
+
+# Sitemap
+Sitemap: https://autonationrentacar.com/sitemap.xml

@@ -1,0 +1,167 @@
+/*
+ * jQuery Lighter
+ * Copyright 2015 Kevin Sylvestre
+ * 1.3.4
+ */
+
+@import ../bourbon/bourbon
+
+$black: #000
+$white: #FFF
+$fast: 0.4s
+$slow: 0.8s
+$delta: 30deg
+
+$alpha: 0.2s
+$sigma: 0.4s
+$omega: 0.6s
+
+$namespace: "lighter"
+
+.#{$namespace}
+  position: fixed
+  top: 0
+  bottom: 0
+  left: 0
+  right: 0
+  z-index: 4000
+  opacity: 1.0
+  img
+    display: block
+    width: 100%
+    height: 100%
+
+  &-fade &-overlay
+    opacity: 0.0
+
+  &-loading &-spinner
+    opacity: 1.0
+    +transform(scale(1.0))
+
+  &-loading &-container
+    opacity: 0.0
+    +transform(scale(0.4))
+
+  &-fetched &-spinner
+    opacity: 0.0
+    +transform(scale(0.4))
+
+  &-fetched &-container
+    opacity: 1.0
+    +transform(scale(1.0))
+
+  &-fade &-container
+    opacity: 0.0
+    +transform(scale(0.4))
+
+  &-fade &-spinner
+    opacity: 0.0
+    +transform(scale(0.4))
+
+  &-overlay
+    +transition(all $fast ease-in-out)
+    +transition-property(opacity,transform)
+    background: rgba($white, 0.8)
+    height: 100%
+    width: 100%
+
+  &-container
+    +transition(all $fast ease-in-out)
+    +transition-property(opacity,transform)
+    background: $white
+    position: absolute
+    z-index: 4000
+    top:    50%
+    left:   50%
+    right:  50%
+    bottom: 50%
+    box-shadow: 0px 2px 8px rgba($black, 0.4)
+
+  &-close
+    top: 0
+    left: 0
+    width: 30px
+    height: 30px
+    margin: -15px
+    line-height: 28px
+    font-size: 16pt
+    font-family: Helvetica, Arial, serif
+
+  &-next,&-prev
+    display: none
+    top: 50%
+    width: 40px
+    height: 40px
+    margin: -20px 0
+    line-height: 34px
+    font-size: 32pt
+    font-family: Times, serif
+
+  &-next
+    right: 40px
+
+  &-prev
+    left: 40px
+
+  &-next,
+  &-prev,
+  &-close
+    cursor: pointer
+    position: absolute
+    z-index: 8000
+    text-align: center
+    border-radius: 50%
+    color: rgba(255, 255, 255, 0.8)
+    background: rgba($black, 0.2)
+    +user-select
+    +transition(all $fast ease-in-out)
+    +transition-property(color,background)
+
+    &:hover
+      color: rgba($white, 1.0)
+      background: rgba($black, 0.4)
+
+    &:active
+      color: rgba($white, 1.0)
+      background: rgba($black, 0.4)
+
+  &-spinner
+    +clearfix
+    +transition(opacity $fast ease-in-out)
+    position: absolute
+    width: 60px
+    height: 20px
+    margin: -10px -30px
+    z-index: 4000
+    top:    50%
+    left:   50%
+    right:  50%
+    bottom: 50%
+
+  &-dot
+    display: block
+    float: left
+    background: rgba($black, 0.2)
+    width: 16px
+    height: 16px
+    margin: 2px
+    padding: 0
+    border-radius: 50%
+
+    +animation(#{$namespace}-bounce $slow * 2 infinite ease-in-out)
+    &:nth-child(1)
+      +animation-delay((-$fast / 3) * 3)
+    &:nth-child(2)
+      +animation-delay((-$fast / 3) * 2)
+    &:nth-child(3)
+      +animation-delay((-$fast / 3) * 1)
+
++keyframes(#{$namespace}-bounce)
+  from,to
+    +transform(scale(0.0))
+  20%
+    +transform(scale(0.0))
+  50%
+    +transform(scale(1.0))
+  80%
+    +transform(scale(0.0))

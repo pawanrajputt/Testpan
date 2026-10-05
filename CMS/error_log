@@ -1,0 +1,18 @@
+[07-Dec-2024 19:39:05 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APPPATH" in /home/dfcrtbrm/public_html/system/core/CodeIgniter.php:65
+Stack trace:
+#0 /home/dfcrtbrm/public_html/index.php(9): require_once()
+#1 {main}
+  thrown in /home/dfcrtbrm/public_html/system/core/CodeIgniter.php on line 65
+[07-Dec-2024 19:39:08 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "APPPATH" in /home/dfcrtbrm/public_html/system/core/CodeIgniter.php:65
+Stack trace:
+#0 /home/dfcrtbrm/public_html/index.php(9): require_once()
+#1 {main}
+  thrown in /home/dfcrtbrm/public_html/system/core/CodeIgniter.php on line 65
+[07-Dec-2024 19:54:48 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "BASEPATH" in /home/dfcrtbrm/public_html/index.php:9
+Stack trace:
+#0 {main}
+  thrown in /home/dfcrtbrm/public_html/index.php on line 9
+[07-Dec-2024 19:55:02 UTC] PHP Fatal error:  Uncaught Error: Undefined constant "BASEPATH" in /home/dfcrtbrm/public_html/index.php:19
+Stack trace:
+#0 {main}
+  thrown in /home/dfcrtbrm/public_html/index.php on line 19

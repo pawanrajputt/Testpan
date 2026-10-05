@@ -1,0 +1,87 @@
+<?php 
+
+include_once 'connect.php';
+include_once 'headersfunction.php';
+
+if(isset($_POST['phone']) && isset($_POST['mobile_otp'])){
+	
+		
+		$phone = mysqli_real_escape_string($conn,$_POST['phone']);
+		$mobile_otp = mysqli_real_escape_string($conn,$_POST['mobile_otp']);
+		$device_type = mysqli_real_escape_string($conn,$_POST['device_type']);
+		$device_token = mysqli_real_escape_string($conn,$_POST['device_token']);
+
+		$usrsql = "SELECT * FROM  tt_admin_users where mobile_phone='".$phone."' and role_id=9 and mobile_otp='".$mobile_otp."' and deleted=0";
+		$usrres = mysqli_query($conn, $usrsql);
+		$user_cnt = mysqli_num_rows($usrres);
+		$userdata = mysqli_fetch_assoc($usrres);
+		$userStatus=$userdata['status'];
+		if($userdata['mpin']){ $mpin=$userdata['mpin'];	} else { $mpin="";	}
+		
+		if($user_cnt > 0){
+				
+				$user_id = $userdata['id'];
+			
+				
+				$username = $userdata['first_name'];
+			
+				
+			
+			$cpQry = "SELECT * from tp_order WHERE 1=1 AND user_id='".$user_id."' and payment_status='Success' and status=0 and deleted=0";
+			$cp_res = mysqli_query($conn, $cpQry);
+			$cp_count = mysqli_num_rows($cp_res);
+			$orderdata = mysqli_fetch_assoc($cp_res);
+			$today= date("Y-m-d");
+			$pakg_start_date= $orderdata['start_date'];
+			$pakg_end_date= $orderdata['end_date'];
+			
+			if($pakg_end_date >= $today)
+			{
+				$packageActive=1;
+			}
+			if($pakg_end_date < $today)
+			{
+				$packageActive=0;
+			}
+				
+				
+				$querySql = "UPDATE tt_admin_users SET device_token='$device_token', device_type='$device_type' where id= '$user_id'";
+				$queryRun = mysqli_multi_query($conn, $querySql); 
+				
+				$ustql = "insert into tt_admin_users_login_logs set user_id='".$user_id."', last_login_date='".date("Y-m-d h:i:s")."', log_date='".date("Y/m/d")."', log_time='".date('H:i:s')."', log_mode='mobile'";
+				$ctres = mysqli_query($conn, $ustql);
+				$usermsg='1';
+		
+		}else{
+
+			$usermsg='0';
+		}
+		
+		if($usermsg==1)
+		{
+			$data = array(
+				'success' => 1,
+				'user_id' => $user_id,
+				'username' => $username,
+				'mpin' => $mpin,
+				'packageActive' => $packageActive,
+				'message' => 'Login Success , data inserted',
+				'app_message' => 'Login Success'
+			);
+		}
+		if($usermsg==0)
+		{
+			$data = array(
+				'success' => 0,
+				'message' => 'Login Failed , data not inserted',
+				'app_message' => 'Login Failed'
+			);
+		}
+		
+}
+	
+
+echo json_encode($data);
+ 
+
+?>
