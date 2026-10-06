@@ -1,5 +1,6 @@
 <div class="col-2 p-0 project-aside pe-3">
     <div>
+        <button class="cross-icon">✕</button>
         <div class="pt-2 ps-2 pb-2">
             <img src="<?php echo base_url('assets/images/logo.png')?>" style="height: 100px; width: 100px;margin: 0px 50px;">
             <a href="<?php echo base_url('dashboard')?>" class="bookmytestcenter-heading">
@@ -45,7 +46,7 @@
                 </li>
                 <li class="tablecalenderTab">
                     <a href="#" onclick="logoutAC()">
-                        <img src="https://cdn-icons-png.flaticon.com/512/450/450387.png" alt="radio" style="height: 25px;width: 18px;" />
+                        <img src="https://cdn-icons-png.flaticon.com/512/450/450387.png" alt="radio" style="height: 25px;width: 18px;background: #2a75ae;" />
                        Logout
                     </a>
                 </li>
@@ -57,4 +58,4 @@
         </div>
     </div>
 </div>
-<div class="col-10 px-3 right-section-project">
+<div class="col-12 col-lg-10 px-3 right-section-project dashboard-page">

@@ -1235,3 +1235,10 @@ $("#btnAcceptOffer").click(function(){
     });
 
 });
+
+$(document).on("click",".hambergur-menu",function(){
+    $(".project-aside").toggleClass("active");
+})
+$(document).on("click",".cross-icon",function(){
+    $(".project-aside").removeClass("active");
+})

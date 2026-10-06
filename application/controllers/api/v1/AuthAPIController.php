@@ -1,62 +1,21 @@
 <?php
+defined('BASEPATH') or exit('No direct script access allowed');
 
-if (!defined('BASEPATH'))
-    exit('No direct script access allowed');
-ini_set('display_errors', 1);
-
-class AuthController extends CI_Controller
+class AuthAPIController extends CI_Controller
 {
 
-    function __construct()
+    public function __construct()
     {
         parent::__construct();
+        header("Content-Type: application/json");
+
         $this->load->model('Common_model');
         $this->load->library('session');
-        $this->load->helper('email');
     }
 
-
-    public function index()
-    {
-
-        $this->session->unset_userdata([
-            'mpin',
-            'otp',
-            'mobile_phone',
-            'email',
-            'name',
-            'country_code',
-        ]);
-
-        // ❗ If an incomplete center exists, force login
-        if ($this->session->userdata('ac_id')) {
-            $this->logout();
-            exit;
-        }
-
-        $data['countries'] = $this->Common_model->getdata_array('tt_countries', array('is_active' => 1));
-        $data['center_type'] = $this->Common_model->getdata_array('tt_center_type', array('deleted' => 0));
-
-        $data['privacyPolicy'] = $this->Common_model->getdata('cms', array('slug' => 'privacy-policy', 'status' => 1));
-        $data['termsCondition'] = $this->Common_model->getdata('cms', array('slug' => 'terms-condition', 'status' => 1));
-
-        $this->load->view('layouts/auth/header');
-        $this->load->view('auth/signup', $data);
-        $this->load->view('layouts/auth/footer');
-    }
-
-
-    public function cmsPage($slug)
-    {
-
-        $data['cmsData'] = $this->Common_model->getdata('cms', array('slug' => $slug));
-
-        $this->load->view('layouts/auth/header');
-        $this->load->view('auth/cms', $data);
-        $this->load->view('layouts/auth/footer');
-    }
-
-
+    // ===========================================
+    // SEND SMS Helper
+    // ===========================================
     private function sendSms($number, $message)
     {
         // Store the new phone number and OTP in the session
@@ -118,34 +77,30 @@ class AuthController extends CI_Controller
     }
 
 
+    // ===========================================
+    // CHECK PHONE EXISTS
+    // ===========================================
     public function checkPhoneExists()
     {
-
         $phone = $this->input->post('mobile_phone');
 
-        if ($phone == 7489858911) {
-
-            $check = $this->Common_model->getdata('tt_admin_users', array('mobile_phone' => $phone));
-
-            if ($check) {
-                $this->Common_model->Deletedata('tt_admin_users', array('mobile_phone' => $phone));
-                $this->Common_model->Deletedata('tt_client', array('ac_id' => $check->id));
-            }
-        }
-
-
-        if (empty($phone)) {
-            echo json_encode(['exists' => false]);
+        if (!$phone) {
+            echo json_encode(['status' => 'error', 'message' => 'Mobile number required']);
             return;
         }
 
-        // Check if phone exists in your database
-        $exists = $this->Common_model->phone_exists($phone);
+        $exists = $this->Common_model->check_phone_exists($phone);
 
-        echo json_encode(['exists' => $exists]);
+        echo json_encode([
+            'status' => 'success',
+            'exists' => $exists
+        ]);
     }
 
 
+    // ===========================================
+    // SEND OTP
+    // ===========================================
     public function sendOtp()
     {
         $mobile = $this->input->post('mobile_phone');
@@ -155,56 +110,46 @@ class AuthController extends CI_Controller
             return;
         }
 
-        // OTP generate
-        if ($mobile == 7489858911) {
-            $otp = 123456;
-        } else {
-            $otp = rand(100000, 999999);
-        }
-
-
+        $otp = rand(100000, 999999);
         $otpHash = password_hash($otp, PASSWORD_DEFAULT);
-        $expiry  = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
-        // Delete old OTP
+        $expiry = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+        // Delete old OTPs
         $this->db->delete('otp_verifications', ['mobile_phone' => $mobile]);
 
         // Insert new OTP
         $this->db->insert('otp_verifications', [
             'mobile_phone' => $mobile,
-            'otp_hash'     => $otpHash,
-            'expires_at'   => $expiry,
-            'attempts'     => 0,
-            'is_verified'  => 0,
-            'created_at'   => date('Y-m-d H:i:s')
+            'otp_hash' => $otpHash,
+            'expires_at' => $expiry,
+            'created_at' => date('Y-m-d H:i:s')
         ]);
 
+        // Send SMS
         $message = "Your OTP is $otp valid for 10 min only. Testpan India.";
-        $sms = $this->sendSms($mobile, $message);
+        $this->sendSms($mobile, $message);
 
-        // Minimal session data
-        $this->session->set_userdata([
-            'mobile_phone' => $mobile
-        ]);
-
-        if ($sms['status'] === 'success') {
-            echo json_encode(['status' => 'success', 'message' => 'OTP sent successfully']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to send OTP']);
-        }
+        echo json_encode(['status' => 'success', 'message' => 'OTP sent']);
     }
 
 
+    // ===========================================
+    // RESEND OTP
+    // ===========================================
     public function resendOtp()
     {
-        $mobile = $this->session->userdata('mobile_phone');
+        $mobile = $this->input->post('mobile_phone');
 
         if (!$mobile) {
-            echo json_encode(['status' => 'error', 'message' => 'Session expired']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Mobile number required'
+            ]);
             return;
         }
 
-        // Rate limit: 60 seconds
+        // OPTIONAL: resend rate limit (last 60 sec)
         $lastOtp = $this->db
             ->where('mobile_phone', $mobile)
             ->order_by('created_at', 'DESC')
@@ -213,19 +158,22 @@ class AuthController extends CI_Controller
 
         if ($lastOtp && strtotime($lastOtp->created_at) > strtotime('-60 seconds')) {
             echo json_encode([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Please wait before requesting OTP again'
             ]);
             return;
         }
 
+        // Generate OTP
         $otp = rand(100000, 999999);
-
         $otpHash = password_hash($otp, PASSWORD_DEFAULT);
-        $expiry  = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
-        // Delete old OTP
-        $this->db->delete('otp_verifications', ['mobile_phone' => $mobile]);
+        $expiry = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+
+        // Remove old OTPs
+        $this->db->delete('otp_verifications', [
+            'mobile_phone' => $mobile
+        ]);
 
         // Insert new OTP
         $this->db->insert('otp_verifications', [
@@ -237,23 +185,34 @@ class AuthController extends CI_Controller
             'created_at'   => date('Y-m-d H:i:s')
         ]);
 
+        // Send SMS
         $message = "Your OTP is $otp valid for 10 min only. Testpan India.";
         $sms = $this->sendSms($mobile, $message);
 
         if ($sms['status'] === 'success') {
-            echo json_encode(['status' => 'success', 'message' => 'OTP resent successfully']);
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'OTP resent successfully'
+            ]);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to resend OTP']);
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Failed to resend OTP'
+            ]);
         }
     }
 
+
+    // ===========================================
+    // VERIFY OTP
+    // ===========================================
     public function verifyOtp()
     {
+        $mobile = $this->input->post('mobile_phone');
         $otp    = $this->input->post('otp');
-        $mobile = $this->session->userdata('mobile_phone');
 
-        if (!$otp || !$mobile) {
-            echo json_encode(['status' => 'error', 'message' => 'OTP or session missing']);
+        if (!$mobile || !$otp) {
+            echo json_encode(['status' => 'error', 'message' => 'Mobile & OTP required']);
             return;
         }
 
@@ -279,7 +238,6 @@ class AuthController extends CI_Controller
         }
 
         if (!password_verify($otp, $row->otp_hash)) {
-
             $this->db->set('attempts', 'attempts+1', false)
                 ->where('id', $row->id)
                 ->update('otp_verifications');
@@ -295,108 +253,17 @@ class AuthController extends CI_Controller
             ['id' => $row->id]
         );
 
-        // Check client already exists
-        $check = $this->Common_model->getdata(
-            'tt_admin_users',
-            ['mobile_phone' => $mobile]
-        );
-
-        $is_already = $check ? 1 : 0;
-
-        echo json_encode([
-            'status'      => 'success',
-            'message'     => 'OTP verified successfully',
-            'is_already'  => $is_already
-        ]);
+        echo json_encode(['status' => 'success', 'message' => 'OTP verified']);
     }
 
-
-
-    public function storeMpin()
-    {
-        $mpin = $this->input->post('mpin');
-        $this->session->set_userdata('mpin', $mpin);
-        echo json_encode([
-            'status' => 'success',
-            'message' => 'M-Pin created successfully'
-        ]);
-        exit;
-    }
-
-
-    public function login()
-    {
-        $mpin = $this->input->post('mpin');
-        $mobile_phone = $this->input->post('mobile_phone');
-        $where = array('mpin' => $mpin, 'mobile_phone' => $mobile_phone, 'role_id' => 12);
-
-        $existingAC = $this->Common_model->getdata('tt_admin_users', $where);
-
-        if ($existingAC) {
-
-            $check = $this->Common_model->getdata('tt_client', array('ac_id' => $existingAC->id));
-
-            if ($check->deleted == 1) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'No account found on this details. Please contact support for more information.'
-                ]);
-                exit;
-            }
-
-            if ($existingAC->deleted == 1) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Your account is deleted. Please contact support for more information.'
-                ]);
-                exit;
-            }
-
-            if ($existingAC->approved != 1) {
-                echo json_encode([
-                    'status' => 'error',
-                    'message' => 'Your account is deactived by team. Please contact support for more information!'
-                ]);
-                exit;
-            }
-
-            $data = array('client_base_url' => base_url());
-
-            $this->Common_model->UpdateRecord('tt_client', $data, ['ac_id' => $existingAC->id]);
-
-            $sessionData = array();
-
-            $sessionData = [
-                'ac_id' => $existingAC->id,
-                'is_logged_in' => true
-            ];
-
-            $this->session->set_userdata($sessionData);
-
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Login successfully'
-            ]);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'You account doesn’t exist, please create a new one.'
-            ]);
-        }
-        exit;
-    }
-
-
-    public function logout()
-    {
-        $this->session->unset_userdata(['mpin', 'otp', 'mobile_phone', 'exam_center_id', 'is_logged_in']);
-        $this->session->sess_destroy();
-        return redirect('/');
-    }
-
-
+    /* =======================================================
+     REGISTER CLIENT
+    ======================================================= */
     public function storeACData()
     {
+        // Set JSON response header
+        $this->output->set_content_type('application/json');
+
         // Start transaction
         $this->db->trans_begin();
 
@@ -411,12 +278,11 @@ class AuthController extends CI_Controller
                 'mobile_country_code' => '+91',
                 'mobile_phone' => $this->input->post('mobile_phone'),
                 'is_agree'     => $this->input->post('is_agree') ? 1 : 0,
-                'otp' => $this->session->userdata('otp'),
-                'mpin' => implode('', $this->input->post('mpin')),
-                'role_id' => 12,
-                'created' => $created_at,
-                'updated' => $updated_at,
-                'approved' => 1,
+                'mpin'         => $this->input->post('mpin'),
+                'role_id'      => 12,
+                'created'      => $created_at,
+                'updated'      => $updated_at,
+                'approved'     => 1,
             ];
 
             $lastInsertId = $this->Common_model->insertData('tt_admin_users', $acData);
@@ -460,7 +326,7 @@ class AuthController extends CI_Controller
             ];
 
             // ====================== LOGO UPLOAD ======================
-            $logoName = ''; // Initialize to avoid undefined variable
+            $logoName = '';
             if (!empty($_FILES['logo']['name'])) {
                 $logoDir = 'uploads/client_logo/';
                 if (!is_dir($logoDir)) {
@@ -497,7 +363,7 @@ class AuthController extends CI_Controller
             ];
 
             foreach ($documentMap as $inputName => $dbColumn) {
-                $fileName = ''; // Initialize for each file
+                $fileName = '';
                 if (!empty($_FILES[$inputName]['name'])) {
                     $fileName = time() . '_' . basename($_FILES[$inputName]['name']);
                     $targetPath = $uploadPath . $fileName;
@@ -539,7 +405,6 @@ class AuthController extends CI_Controller
             );
 
             if (!$adminEmailSent) {
-                // Log error but don't throw exception - email failure shouldn't rollback registration
                 log_message('error', 'Admin email failed for AC ID: ' . $lastInsertId);
             }
 
@@ -555,7 +420,6 @@ class AuthController extends CI_Controller
             );
 
             if (!$companyEmailSent) {
-                // Log error but don't throw exception
                 log_message('error', 'Company email failed for AC ID: ' . $lastInsertId);
             }
 
@@ -584,28 +448,28 @@ class AuthController extends CI_Controller
             $this->db->trans_commit();
 
             // ====================== SUCCESS RESPONSE ======================
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Signup successfully',
-                'data' => [
-                    'ac_id' => $lastInsertId,
-                    'client_id' => $client_id
-                ]
-            ]);
-            exit;
+            $this->output
+                ->set_status_header(201) // Created
+                ->set_output(json_encode([
+                    'status' => 'success',
+                    'message' => 'Signup successfully',
+                    'data' => [
+                        'ac_id' => $lastInsertId,
+                        'client_id' => $client_id
+                    ]
+                ]));
         } catch (Exception $e) {
             // ====================== ROLLBACK TRANSACTION ======================
             $this->db->trans_rollback();
 
-            // Log error
             log_message('error', 'Registration failed: ' . $e->getMessage());
 
-            // Send error response
-            echo json_encode([
-                'status' => 'error',
-                'message' => 'Registration failed: ' . $e->getMessage()
-            ]);
-            exit;
+            $this->output
+                ->set_status_header(500)
+                ->set_output(json_encode([
+                    'status' => 'error',
+                    'message' => 'Registration failed: ' . $e->getMessage()
+                ]));
         }
     }
 
@@ -675,39 +539,105 @@ class AuthController extends CI_Controller
     }
 
 
-    public function fetchStateByCountryId()
+    /* =======================================================
+     LOGIN (TOKEN ROTATION)
+    ======================================================= */
+    public function login()
     {
-        $country_id = $this->input->post('country_id');
-        if ($country_id) {
-            $states = $this->Common_model->getdata_array('tt_states', ['country_id' => $country_id]);
-            echo json_encode($states);
-        } else {
-            echo json_encode([]);
+
+        $mobile = trim($this->input->post('mobile_phone'));
+        $mpin   = trim($this->input->post('mpin'));
+        $deviceToken = trim($this->input->post('device_token'));
+        $deviceType = trim($this->input->post('device_type'));
+        $appVersion = trim($this->input->post('app_version'));
+
+        $client = $this->Common_model->getdata('tt_admin_users', [
+            'mobile_phone' => $mobile,
+            'role_id' => 12
+        ]);
+
+        if (!$client || $client->mpin !== $mpin) {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid credentials']);
+            return;
         }
-    }
 
+        $newToken = $this->generateToken();
 
-    public function fetchCityByStateId()
-    {
-        $state_id = $this->input->post('state_id');
-        if ($state_id) {
-            $city = $this->Common_model->getdata_array('tt_city_master', ['state_id' => $state_id]);
-            echo json_encode($city);
-        } else {
-            echo json_encode([]);
+        $this->Common_model->UpdateRecord(
+            'tt_admin_users',
+            [
+                'api_token' => $newToken,
+                'api_token_updated_at' => date('Y-m-d H:i:s')
+            ],
+            ['id' => $client->id]
+        );
+
+        if (!empty($deviceToken)) {
+
+            $this->FirebaseNotification_model->saveDeviceToken([
+                'user_id'      => $client->id,
+                'device_token' => $deviceToken,
+                'device_type'  => !empty($deviceType) ? strtolower($deviceType) : 'android',
+                'app_version'  => $appVersion
+            ]);
         }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Login successful',
+            'api_token' => $newToken
+        ]);
     }
 
-
-    public function resetForgotMpin()
+    /* =======================================================
+     AUTH HELPER
+    ======================================================= */
+    private function authenticateClient()
     {
-        $this->load->view('layouts/auth/header');
-        $this->load->view('auth/forgot-mpin');
-        $this->load->view('layouts/auth/footer');
+        $token = $this->input->get_request_header('X-API-TOKEN');
+
+        if (!$token) {
+            echo json_encode(['status' => 'unauthorized', 'message' => 'API token missing']);
+            exit;
+        }
+
+        $client = $this->Common_model->getdata('tt_admin_users', [
+            'api_token' => $token,
+            'role_id'   => 12
+        ]);
+
+        if (!$client) {
+            echo json_encode(['status' => 'unauthorized', 'message' => 'Invalid API token']);
+            exit;
+        }
+
+        return $client;
+    }
+
+    private function generateToken()
+    {
+        return bin2hex(random_bytes(32));
     }
 
 
-    public function sendResetForgotMpinOtp()
+    /* =======================================================
+     LOGOUT
+    ======================================================= */
+    public function logout()
+    {
+        $client = $this->authenticateClient();
+
+        $this->Common_model->UpdateRecord(
+            'tt_admin_users',
+            ['api_token' => NULL],
+            ['id' => $client->id]
+        );
+
+        echo json_encode(['status' => 'success', 'message' => 'Logged out successfully']);
+    }
+
+
+    public function sendForgotMpinOtp()
     {
         $mobile = $this->input->post('mobile_phone');
 
@@ -716,76 +646,57 @@ class AuthController extends CI_Controller
             return;
         }
 
-        // Client exist check
-        $check = $this->Common_model->getdata(
-            'tt_admin_users',
-            ['role_id' => 12, 'mobile_phone' => $mobile]
-        );
+        // Owner must exist
+        $client = $this->Common_model->getdata('tt_admin_users', [
+            'mobile_phone' => $mobile,
+            'role_id' => 12
+        ]);
 
-        if (!$check) {
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'No account registered on this mobile number'
-            ]);
+        if (!$client) {
+            echo json_encode(['status' => 'error', 'message' => 'Account not found']);
             return;
         }
 
-        // OTP
         $otp = rand(100000, 999999);
-
         $otpHash = password_hash($otp, PASSWORD_DEFAULT);
-        $expiry  = date('Y-m-d H:i:s', strtotime('+10 minutes'));
 
-        // Delete old OTP
-        $this->db->delete('otp_verifications', ['mobile_phone' => $mobile]);
+        $this->db->delete('otp_verifications', [
+            'mobile_phone' => $mobile,
+            'purpose' => 'forgot_mpin'
+        ]);
 
-        // Insert OTP
         $this->db->insert('otp_verifications', [
             'mobile_phone' => $mobile,
             'otp_hash'     => $otpHash,
-            'expires_at'   => $expiry,
+            'purpose'      => 'forgot_mpin',
             'attempts'     => 0,
             'is_verified'  => 0,
+            'expires_at'   => date('Y-m-d H:i:s', strtotime('+5 minutes')),
             'created_at'   => date('Y-m-d H:i:s')
         ]);
 
-        $message = "Your OTP is $otp valid for 10 min only. Testpan India.";
-        $sms = $this->sendSms($mobile, $message);
+        $this->sendSms($mobile, "Your OTP is $otp valid for 10 min only. Testpan India.");
 
-        // Session (minimal)
-        $this->session->set_userdata([
-            'mpin_mobile_phone' => $mobile
-        ]);
-
-        if ($sms['status'] === 'success') {
-            echo json_encode(['status' => 'success', 'message' => 'OTP sent successfully']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Failed to send OTP']);
-        }
+        echo json_encode(['status' => 'success', 'message' => 'OTP sent']);
     }
 
 
-    public function resetForgotMpinOtp()
+    public function verifyForgotMpinOtp()
     {
-        $this->load->view('layouts/auth/header');
-        $this->load->view('auth/forgot-mpin-otp');
-        $this->load->view('layouts/auth/footer');
-    }
-
-
-    public function verifyResetForgotMpinOtp()
-    {
+        $mobile = $this->input->post('mobile_phone');
         $otp    = $this->input->post('otp');
-        $mobile = $this->session->userdata('mpin_mobile_phone');
 
-        if (!$otp || !$mobile) {
-            echo json_encode(['status' => 'error', 'message' => 'OTP or session missing']);
+        if (!$mobile || !$otp) {
+            echo json_encode(['status' => 'error', 'message' => 'Mobile & OTP required']);
             return;
         }
 
         $row = $this->db
-            ->where('mobile_phone', $mobile)
-            ->where('is_verified', 0)
+            ->where([
+                'mobile_phone' => $mobile,
+                'purpose' => 'forgot_mpin',
+                'is_verified' => 0
+            ])
             ->get('otp_verifications')
             ->row();
 
@@ -805,7 +716,6 @@ class AuthController extends CI_Controller
         }
 
         if (!password_verify($otp, $row->otp_hash)) {
-
             $this->db->set('attempts', 'attempts+1', false)
                 ->where('id', $row->id)
                 ->update('otp_verifications');
@@ -814,91 +724,48 @@ class AuthController extends CI_Controller
             return;
         }
 
-        // Mark verified
-        $this->db->update(
-            'otp_verifications',
-            ['is_verified' => 1],
-            ['id' => $row->id]
-        );
+        $this->db->update('otp_verifications', ['is_verified' => 1], ['id' => $row->id]);
 
-        // Flag for MPIN set
-        $this->session->set_userdata(['forgot_otp_verified' => 1]);
-
-        echo json_encode([
-            'status'  => 'success',
-            'message' => 'OTP verified successfully'
-        ]);
+        echo json_encode(['status' => 'success', 'message' => 'OTP verified']);
     }
 
 
-
-    public function newMpinSet()
+    public function resetForgotMpin()
     {
-        $this->load->view('layouts/auth/header');
-        $this->load->view('auth/new-mpin');
-        $this->load->view('layouts/auth/footer');
-    }
+        $mobile = $this->input->post('mobile_phone');
+        $newMpin = trim($this->input->post('mpin'));
 
-
-    public function updateNewMpinSet()
-    {
-        $mobile   = $this->session->userdata('mpin_mobile_phone');
-        $verified = $this->session->userdata('forgot_otp_verified');
-        $mpin     = $this->input->post('mpin');
-
-        if (!$mobile || !$verified) {
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'OTP verification required'
-            ]);
+        if (!$mobile || !$newMpin) {
+            echo json_encode(['status' => 'error', 'message' => 'Mobile & new MPIN required']);
             return;
         }
 
-        // 🔐 MPIN validation
-        if (!$mpin) {
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'M-PIN is required'
-            ]);
-            return;
-        }
+        $otpRow = $this->db
+            ->where([
+                'mobile_phone' => $mobile,
+                'purpose' => 'forgot_mpin',
+                'is_verified' => 1
+            ])
+            ->get('otp_verifications')
+            ->row();
 
-        if (!preg_match('/^[0-9]{4}$/', $mpin)) {
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'M-PIN must be exactly 4 digits'
-            ]);
-            return;
-        }
-
-        $check = $this->Common_model->getdata(
-            'tt_admin_users',
-            ['role_id' => 12, 'mobile_phone' => $mobile]
-        );
-
-        if (!$check) {
-            echo json_encode([
-                'status'  => 'error',
-                'message' => 'Invalid request'
-            ]);
+        if (!$otpRow) {
+            echo json_encode(['status' => 'error', 'message' => 'OTP verification required']);
             return;
         }
 
         $this->Common_model->UpdateRecord(
             'tt_admin_users',
-            ['mpin' => $mpin],
-            ['mobile_phone' => $mobile]
+            [
+                'mpin' => $newMpin,
+                'updated' => date('Y-m-d H:i:s')
+            ],
+            ['mobile_phone' => $mobile, 'role_id' => 12]
         );
 
-        // Cleanup session
-        $this->session->unset_userdata([
-            'mpin_mobile_phone',
-            'forgot_otp_verified'
-        ]);
+        // Cleanup OTP
+        $this->db->delete('otp_verifications', ['mobile_phone' => $mobile, 'purpose' => 'forgot_mpin']);
 
-        echo json_encode([
-            'status'  => 'success',
-            'message' => 'M-PIN updated successfully'
-        ]);
+        echo json_encode(['status' => 'success', 'message' => 'MPIN reset successfully']);
     }
 }

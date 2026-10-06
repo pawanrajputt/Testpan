@@ -15,7 +15,11 @@
     <div class="project-pages-section">
         <!-- top project-create- navbar section -->
         <div class='notification-navbar'>
-            <h2 class='m-0 fs-4'>My Project</h2>
+            <div class='d-flex align-items-center'>
+                <h2 class='m-0 fs-4'>My Project</h2>
+                <button class='hambergur-menu'>☰</button>
+            </div>
+            
             <div>
                 <button class='create-project-btn createProjectBtn'>
                     <img src="<?php echo base_url('assets/icon-folder/project-icons/Plus.png')?>" alt="">Create Project
@@ -25,7 +29,7 @@
         <hr>
 
         <!-- Numerical card section  -->
-        <div class="row">
+        <div class="row overview-row">
             <div class="col-4 ">
                 <div class='d-flex numerical-box1'>
                     <div class='numerical-img-cnt'>
@@ -272,20 +276,27 @@
                             <div class="col-6">
                                 <label htmlFor="">Exam category</label>
                             </div>
-                            <div class="col-6 ">
-                                <div class='d-flex justify-content-between'>
-                                    <div
-                                        class='d-flex border w-50 align-items-center rounded py-2 px-3 bg-white me-2'>
-                                        <input type="radio" class='me-2' name="exam_category" checked value="government" required/>
-                                        <label htmlFor="">Government</label>
-                                    </div>
-                                    <div
-                                        class='d-flex border w-50 py-2 px-3 align-items-center rounded bg-white ms-2'>
-                                        <input type="radio" class='me-2' name='exam_category' value="private" required/>
-                                        <label htmlFor="">Private</label>
-                                    </div>
-                                </div>
-                            </div>
+                            <div class="col-12 col-md-6">
+    <div class="row g-2">
+
+        <div class="col-6">
+            <div class="d-flex border align-items-center rounded py-2 px-3 bg-white">
+                <input type="radio" class="me-2" name="exam_category"
+                       checked value="government" required />
+                <label>Government</label>
+            </div>
+        </div>
+
+        <div class="col-6">
+            <div class="d-flex border align-items-center rounded py-2 px-3 bg-white">
+                <input type="radio" class="me-2" name="exam_category"
+                       value="private" required />
+                <label>Private</label>
+            </div>
+        </div>
+
+    </div>
+</div>
                         </div>
                         <div class="row align-items-center pb-3">
                             <div class="col-6">
@@ -293,7 +304,7 @@
                             </div>
                             <?php $today = date('Y-m-d'); ?>
 
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <div class='row'>
                                     <div class='col-6'>
                                         <input type="date"
@@ -345,7 +356,7 @@
                             <div class="col-6">
                                 <label htmlFor="">Exam mode</label>
                             </div>
-                            <div class="col-6 ">
+                            <div class="col-12 col-md-6">
                                 <div class='d-flex justify-content-between'>
                                     <div
                                         class='d-flex border w-50 align-items-center rounded py-2 px-3 bg-white me-2'>
@@ -496,7 +507,7 @@
                         </div>
                         <div class="row align-items-center pb-3">
                             <div class="col-6">Security Guard</div>
-                            <div class="col-6">
+                            <div class="col-12 col-md-6">
                                 <div class='d-flex justify-content-between'>
                                     <div class='border w-50 me-2 px-3 py-2 rounded d-flex bg-white'>
                                         <input type="radio" name='security_guard' value="male" />

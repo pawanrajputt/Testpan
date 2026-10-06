@@ -1,1 +1,625 @@
-<?php if (!defined('BASEPATH')) exit('No direct script access allowed');class Common_model extends CI_Model{    public function __construct()    {        parent::__construct();    }    public function insertData($table, $data)    {        $this->db->insert($table, $data);        $id = $this->db->insert_id();        if (!empty($id > 0)) {            return $id;        } else {            return false;        }    }    public function UpdateRecord($TableName, $Data, $WhereData = NULL)    {        if ($WhereData != NULL) {            $this->db->where($WhereData);        }        $Result = $this->db->update($TableName, $Data);        return $Result;    }    public function Deletedata($table, $where)    {        $this->db->delete($table, $where);        return TRUE;    }    public function getdata($table, $where)    {        $this->db->select('*');        if (!empty($where)) {            $this->db->where($where);        }        $query = $this->db->get($table)->row();        return $query;    }    public function getdata_array($table, $where)    {        $this->db->select('*');        if (!empty($where)) {            $this->db->where($where);        }        $query = $this->db->get($table)->result_array();        return $query;    }    public function getSignleClientData($ac_id)    {        $this->db->select('          tt_client.*,          tt_countries.name AS country_name,          tt_states.title AS state_name,          tt_city_master.city_name AS city_name      ');        $this->db->from('tt_client');        $this->db->join('tt_countries', 'tt_countries.id = tt_client.country_id', 'left');        $this->db->join('tt_states', 'tt_states.id = tt_client.state', 'left');        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_client.city', 'left');        $this->db->where('tt_client.ac_id', $ac_id);        return $this->db->get()->row();    }    public function getClientProjectDataGroupBy($ac_id, $status = null)    {        $this->db->select('            tt_project_detail.*,            COUNT(tt_city_master.city_id) AS total_cities,            SUM(tt_project_detail.number_of_seats) AS total_seats,            tt_project_detail.client_negotiation_status,            tt_project_detail.admin_client_final_amount        ');        $this->db->from('tt_project_detail');        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_project_detail.exam_city_id', 'left');        $this->db->where('tt_project_detail.client_id', $ac_id);        $this->db->where('tt_project_detail.deleted', 0);        if ($status != null) {            if ($status == 'pending') {                $this->db->where('tt_project_detail.start_date >', date('Y-m-d'));            } elseif ($status == 'completed') {                $this->db->where('tt_project_detail.end_date <', date('Y-m-d'));            }        }        $this->db->group_by('tt_project_detail.project_id');        $this->db->order_by('tt_project_detail.project_id', 'DESC');        return $this->db->get()->result_array();    }    public function getProjectDetail($project_id)    {        $this->db->select('          tt_project_detail.*,          tt_city_master.city_name AS city_name      ');        $this->db->from('tt_project_detail');        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_project_detail.exam_city_id', 'left');        $this->db->where('tt_project_detail.project_id', $project_id);        $this->db->where('tt_project_detail.deleted', 0);        return $this->db->get()->row();    }    public function viewProjectDetail($project_id)    {        $this->db->select('        tt_project_detail.*,        tt_city_master.city_name AS city_name    ');        $this->db->from('tt_project_detail');        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_project_detail.exam_city_id', 'left');        $this->db->where('tt_project_detail.project_id', $project_id);        $this->db->where('tt_project_detail.deleted', 0);        return $this->db->get()->result();    }    public function getAssignCenterForAc(        $project_id    ) {        $this->db->select(            '    tt_exam_center.*,    req.status AS request_status,    req.center_seat,    req.client_status,    req.exam_center_status,    req.admin_status,    req.project_id,    tt_city_master.city_name,    tt_city_master.city_id    '        );        $this->db->from(            'tt_center    AS tt_exam_center'        );        $this->db->join(            'tt_send_booking_request    AS req',            'tt_exam_center.center_id    =    req.center_id'        );        $this->db->join(            'tt_city_master',            'tt_exam_center.city_id    =    tt_city_master.city_id'        );        $this->db->where(            'req.project_id',            $project_id        );    /*    Center Accepted    */        $this->db->where('req.exam_center_status',1);    /*    ADMIN FINAL APPROVED    */        $this->db->where('req.admin_status',1);        $this->db->where('tt_exam_center.deleted',0);        return $this->db            ->get()            ->result_array();    }    public function get_total_booked_seat($table, $clientID, $project_id)    {        if (empty($clientID)) {            return 0;        }        // Get all center_ids for this client        $this->db->select('center_id');        $this->db->distinct();  // Get unique center_ids        $this->db->from($table);        $this->db->where('client_id', $clientID);        $this->db->where('project_id', $project_id);        $this->db->where('client_status', 1);        $this->db->where('exam_center_status', 1);        $this->db->where('admin_status', 1);        $results = $this->db->get()->result_array();        if (empty($results)) {            return 0;        }        // Extract center_ids        $center_ids = array_column($results, 'center_id');        // Get sum of capacities for these centers        $this->db->select_sum('capacity');        $this->db->from('tt_center');        $this->db->where_in('center_id', $center_ids);  // Use where_in instead of multiple or_where        $this->db->where('deleted', 0);        $query = $this->db->get()->row();        return $query->capacity ?? 0;    }    public function get_number_of_seats($table, $clientID, $project_id)    {        if (empty($clientID)) {            return 0;        }        // Step 1: Get all project_id and client_id combinations        $this->db->select('project_id, client_id');        $this->db->from($table);        $this->db->where('client_id', $clientID);        $this->db->where('project_id', $project_id);        $this->db->where('client_status', 1);        $this->db->where('exam_center_status', 1);        $this->db->where('admin_status', 1);        $results = $this->db->get()->result_array();        if (empty($results)) {            return 0;        }        // Extract unique project/client combinations        $projectClientPairs = [];        foreach ($results as $row) {            $key = $row['project_id'] . '-' . $row['client_id'];            $projectClientPairs[$key] = [                'project_id' => $row['project_id'],                'client_id' => $row['client_id']            ];        }        // Step 2: Build WHERE conditions for batch fetch        $this->db->select_sum('number_of_seats');        $this->db->from('tt_project_detail');        $this->db->where('deleted', 0);        $this->db->group_start();        foreach ($projectClientPairs as $pair) {            $this->db->or_group_start();            $this->db->where('project_id', $pair['project_id']);            $this->db->where('client_id', $pair['client_id']);            $this->db->group_end();        }        $this->db->group_end();        $query = $this->db->get()->row();        return $query->number_of_seats ?? 0;    }    public function get_approved_center_count($table, $clientID, $project_id)    {        if (empty($clientID)) {            return 0;        }        // Get all approved center_ids for this client        $this->db->select('center_id');        $this->db->distinct();  // Get unique center_ids        $this->db->from($table);        $this->db->where('client_id', $clientID);        $this->db->where('project_id', $project_id);        $this->db->where('client_status', 1);  // Assuming 1 means approved        $this->db->where('exam_center_status', 1);  // Assuming 1 means approved        $this->db->where('admin_status', 1);        $results = $this->db->get()->result_array();        if (empty($results)) {            return 0;        }        // Return the count of distinct approved centers        return count($results);    }    public function get_total_booked_seat_of_client($table, $clientID)    {        if (empty($clientID)) {            return 0;        }        $result = $this->db            ->select('SUM(center_seat) AS booked_seats')            ->from($table)            ->where('client_id', $clientID)            ->where('client_status', 1)            ->where('exam_center_status', 1)            ->where('admin_status', 1)            ->get()            ->row();        return (int)($result->booked_seats ?? 0);    }    public function get_number_of_seats_of_client($table, $clientID)    {        if (empty($clientID)) {            return 0;        }        // Step 1: Get all project_id and client_id combinations        $this->db->select('project_id, client_id');        $this->db->from($table);        $this->db->where('client_id', $clientID);        $this->db->where('client_status', 1);        $this->db->where('exam_center_status', 1);        $this->db->where('admin_status', 1);        $results = $this->db->get()->result_array();        if (empty($results)) {            return 0;        }        // Extract unique project/client combinations        $projectClientPairs = [];        foreach ($results as $row) {            $key = $row['project_id'] . '-' . $row['client_id'];            $projectClientPairs[$key] = [                'project_id' => $row['project_id'],                'client_id' => $row['client_id']            ];        }        // Step 2: Build WHERE conditions for batch fetch        $this->db->select_sum('number_of_seats');        $this->db->from('tt_project_detail');        $this->db->where('deleted', 0);        $this->db->group_start();        foreach ($projectClientPairs as $pair) {            $this->db->or_group_start();            $this->db->where('project_id', $pair['project_id']);            $this->db->where('client_id', $pair['client_id']);            $this->db->group_end();        }        $this->db->group_end();        $query = $this->db->get()->row();        return $query->number_of_seats ?? 0;    }    public function get_calendar_booking_data($clientID)    {        $today = date('Y-m-d');        // Fetch distinct projects for the client        $this->db->select('          proj.project_id,          proj.exam_type_detail,          proj.exam_name,          proj.start_date,          proj.end_date,          proj.client_id,          SUM(proj.number_of_seats) AS total_required      ');        $this->db->from('tt_project_detail proj');        $this->db->where('proj.client_id', $clientID);        $this->db->where('proj.deleted', 0);        $this->db->group_by('proj.project_id');        $projects = $this->db->get()->result();        $result = [];        foreach ($projects as $project) {            // Get city wise requirements and booked seats            $cities = $this->db->query("              SELECT                   city.city_id,                   city.city_name,                   proj.number_of_seats AS required,                  COALESCE(SUM(r.center_seat), 0) AS booked              FROM tt_project_detail proj              JOIN tt_city_master city                   ON proj.exam_city_id = city.city_id              LEFT JOIN tt_send_booking_request r                   ON r.project_id = proj.project_id                   AND r.city_id = city.city_id                  AND r.client_status = 1                   AND r.exam_center_status = 1                  AND r.admin_status = 1              WHERE proj.project_id = ?                 AND proj.deleted = 0              GROUP BY city.city_id, proj.number_of_seats          ", [$project->project_id])->result();            $allCitiesCovered = true;            $totalBooked = 0;            $cityNames = [];            foreach ($cities as $c) {                $cityNames[] = $c->city_name;                $totalBooked += $c->booked;                // If any city is not fully covered, mark as false                if ((int)$c->booked < (int)$c->required) {                    $allCitiesCovered = false;                }            }            // Skip this project if not all cities are covered            if (!$allCitiesCovered) {                continue;            }            // Add only fully covered projects            $project->total_cities = count($cities);            $project->city_names = implode(', ', $cityNames);            $project->total_booked = $totalBooked;            // Status            $start_date = new DateTime($project->start_date);            $end_date   = new DateTime($project->end_date);            $current    = new DateTime();            if ($current < $start_date) {                $project->status = "Upcoming";            } elseif ($current >= $start_date && $current <= $end_date) {                $project->status = "In progress";            } else {                $project->status = "Completed";            }            $result[] = $project;        }        // Sort projects by start date        usort($result, fn($a, $b) => strtotime($a->start_date) - strtotime($b->start_date));        return $result;    }    public function phone_exists($phone)    {        $this->db->where('mobile_phone', $phone);        $query = $this->db->get('tt_admin_users');        return $query->num_rows() > 0;    }    public function get_city_wise_seat_summary($project_id, $client_id)    {        return $this->db->query("            SELECT                c.city_id,                c.city_name,                p.number_of_seats AS total_seats,                IFNULL((                    SELECT SUM(req.center_seat)                    FROM tt_send_booking_request req                    WHERE req.project_id = p.project_id                      AND req.city_id = p.exam_city_id                      AND req.client_id = ?                      AND req.exam_center_status = 1                      AND req.client_status = 1                      AND req.admin_status = 1                ),0) AS booked_seats            FROM tt_project_detail p            LEFT JOIN tt_city_master c                ON c.city_id = p.exam_city_id            WHERE p.project_id = ?              AND p.deleted = 0            ORDER BY c.city_name        ", [$client_id, $project_id])->result_array();    }    public function get_total_assessed_candidates($client_id)    {        $this->db->select('            p.project_id,            p.exam_city_id,            SUM(p.number_of_seats) AS total_seats,            SUM(                CASE                    WHEN req.exam_center_status = 1                    AND req.admin_status = 1                    AND req.client_status = 1                    THEN IFNULL(req.center_seat, 0)                    ELSE 0                END            ) AS assigned_capacity        ');        $this->db->from('tt_project_detail p');        $this->db->join(            'tt_send_booking_request req',            'req.project_id = p.project_id            AND req.city_id = p.exam_city_id            AND req.client_id = '.$this->db->escape($client_id),            'left'        );        $this->db->where('p.client_id', $client_id);        $this->db->where('p.deleted', 0);        $this->db->group_by([            'p.project_id',            'p.exam_city_id'        ]);        $rows = $this->db->get()->result_array();        $assessed = 0;        $required = 0;        foreach ($rows as $row) {            $reqSeats = (int)$row['total_seats'];            $assigned = (int)$row['assigned_capacity'];            $assessed += min($assigned, $reqSeats);            $required += $reqSeats;        }        return [            'assessed' => $assessed,            'required' => $required        ];    }    public function get_total_cities_covered($ac_id)    {        $this->db->select('COUNT(DISTINCT city_id) as total_cities');        $this->db->from('tt_send_booking_request');        $this->db->where('client_id', $ac_id);        $query = $this->db->get();        return $query->row();    }}
+<?php if (!defined('BASEPATH')) exit('No direct script access allowed');
+
+class Common_model extends CI_Model
+{
+
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
+    public function insertData($table, $data)
+    {
+        $this->db->insert($table, $data);
+        $id = $this->db->insert_id();
+        if (!empty($id > 0)) {
+            return $id;
+        } else {
+            return false;
+        }
+    }
+
+
+    public function UpdateRecord($TableName, $Data, $WhereData = NULL)
+    {
+
+        if ($WhereData != NULL) {
+
+            $this->db->where($WhereData);
+        }
+
+        $Result = $this->db->update($TableName, $Data);
+
+        return $Result;
+    }
+
+
+    public function Deletedata($table, $where)
+    {
+
+        $this->db->delete($table, $where);
+
+        return TRUE;
+    }
+
+
+    public function getdata($table, $where)
+    {
+
+        $this->db->select('*');
+
+        if (!empty($where)) {
+
+            $this->db->where($where);
+        }
+
+        $query = $this->db->get($table)->row();
+
+        return $query;
+    }
+
+
+    public function getdata_array($table, $where)
+    {
+
+        $this->db->select('*');
+
+        if (!empty($where)) {
+
+            $this->db->where($where);
+        }
+
+        $query = $this->db->get($table)->result_array();
+
+        return $query;
+    }
+
+    public function getSignleClientData($ac_id)
+    {
+        $this->db->select('
+          tt_client.*,
+          tt_countries.name AS country_name,
+          tt_states.title AS state_name,
+          tt_city_master.city_name AS city_name
+      ');
+        $this->db->from('tt_client');
+        $this->db->join('tt_countries', 'tt_countries.id = tt_client.country_id', 'left');
+        $this->db->join('tt_states', 'tt_states.id = tt_client.state', 'left');
+        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_client.city', 'left');
+        $this->db->where('tt_client.ac_id', $ac_id);
+
+        return $this->db->get()->row();
+    }
+
+
+    public function getClientProjectDataGroupBy($ac_id, $status = null)
+    {
+        $this->db->select('
+            tt_project_detail.*,
+
+            COUNT(tt_city_master.city_id) AS total_cities,
+
+            SUM(tt_project_detail.number_of_seats) AS total_seats,
+
+            tt_project_detail.client_negotiation_status,
+
+            tt_project_detail.admin_client_final_amount
+        ');
+        $this->db->from('tt_project_detail');
+        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_project_detail.exam_city_id', 'left');
+        $this->db->where('tt_project_detail.client_id', $ac_id);
+        $this->db->where('tt_project_detail.deleted', 0);
+
+        if ($status != null) {
+            if ($status == 'pending') {
+                $this->db->where('tt_project_detail.start_date >', date('Y-m-d'));
+            } elseif ($status == 'completed') {
+                $this->db->where('tt_project_detail.end_date <', date('Y-m-d'));
+            }
+        }
+
+        $this->db->group_by('tt_project_detail.project_id');
+        $this->db->order_by('tt_project_detail.start_date', 'DESC');
+
+        return $this->db->get()->result_array();
+    }
+
+
+
+    public function getProjectDetail($project_id)
+    {
+        $this->db->select('
+          tt_project_detail.*,
+          tt_city_master.city_name AS city_name
+      ');
+        $this->db->from('tt_project_detail');
+        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_project_detail.exam_city_id', 'left');
+        $this->db->where('tt_project_detail.project_id', $project_id);
+        $this->db->where('tt_project_detail.deleted', 0);
+
+        return $this->db->get()->row();
+    }
+
+
+    public function viewProjectDetail($project_id)
+    {
+        $this->db->select('
+        tt_project_detail.*,
+        tt_city_master.city_name AS city_name
+    ');
+        $this->db->from('tt_project_detail');
+        $this->db->join('tt_city_master', 'tt_city_master.city_id = tt_project_detail.exam_city_id', 'left');
+        $this->db->where('tt_project_detail.project_id', $project_id);
+        $this->db->where('tt_project_detail.deleted', 0);
+
+        return $this->db->get()->result();
+    }
+
+
+    public function getAssignCenterForAc(
+        $project_id
+    ) {
+
+        $this->db->select(
+
+            '
+
+    tt_exam_center.*,
+
+    req.status AS request_status,
+
+    req.center_seat,
+
+    req.client_status,
+
+    req.exam_center_status,
+
+    req.admin_status,
+
+    req.project_id,
+
+    tt_city_master.city_name,
+
+    tt_city_master.city_id
+
+    '
+
+        );
+
+        $this->db->from(
+
+            'tt_center
+    AS tt_exam_center'
+
+        );
+
+        $this->db->join(
+
+            'tt_send_booking_request
+    AS req',
+
+            'tt_exam_center.center_id
+    =
+    req.center_id'
+
+        );
+
+        $this->db->join(
+
+            'tt_city_master',
+
+            'tt_exam_center.city_id
+    =
+    tt_city_master.city_id'
+
+        );
+
+        $this->db->where(
+
+            'req.project_id',
+
+            $project_id
+
+        );
+
+        /*
+    Center Accepted
+    */
+
+        $this->db->where('req.exam_center_status', 1);
+
+        /*
+    ADMIN FINAL APPROVED
+    */
+
+        $this->db->where('req.admin_status', 1);
+
+        $this->db->where('tt_exam_center.deleted', 0);
+
+        return $this->db
+            ->get()
+            ->result_array();
+    }
+
+
+    public function get_total_booked_seat($table, $clientID, $project_id)
+    {
+        if (empty($clientID)) {
+            return 0;
+        }
+
+        // Get all center_ids for this client
+        $this->db->select('center_id');
+        $this->db->distinct();  // Get unique center_ids
+        $this->db->from($table);
+        $this->db->where('client_id', $clientID);
+        $this->db->where('project_id', $project_id);
+        $this->db->where('client_status', 1);
+        $this->db->where('exam_center_status', 1);
+        $this->db->where('admin_status', 1);
+        $results = $this->db->get()->result_array();
+
+        if (empty($results)) {
+            return 0;
+        }
+
+        // Extract center_ids
+        $center_ids = array_column($results, 'center_id');
+
+        // Get sum of capacities for these centers
+        $this->db->select_sum('capacity');
+        $this->db->from('tt_center');
+        $this->db->where_in('center_id', $center_ids);  // Use where_in instead of multiple or_where
+        $this->db->where('deleted', 0);
+
+        $query = $this->db->get()->row();
+
+        return $query->capacity ?? 0;
+    }
+
+    public function get_number_of_seats($table, $clientID, $project_id)
+    {
+        if (empty($clientID)) {
+            return 0;
+        }
+
+        // Step 1: Get all project_id and client_id combinations
+        $this->db->select('project_id, client_id');
+        $this->db->from($table);
+        $this->db->where('client_id', $clientID);
+        $this->db->where('project_id', $project_id);
+        $this->db->where('client_status', 1);
+        $this->db->where('exam_center_status', 1);
+        $this->db->where('admin_status', 1);
+        $results = $this->db->get()->result_array();
+
+        if (empty($results)) {
+            return 0;
+        }
+
+        // Extract unique project/client combinations
+        $projectClientPairs = [];
+        foreach ($results as $row) {
+            $key = $row['project_id'] . '-' . $row['client_id'];
+            $projectClientPairs[$key] = [
+                'project_id' => $row['project_id'],
+                'client_id' => $row['client_id']
+            ];
+        }
+
+        // Step 2: Build WHERE conditions for batch fetch
+        $this->db->select_sum('number_of_seats');
+        $this->db->from('tt_project_detail');
+        $this->db->where('deleted', 0);
+        $this->db->group_start();
+
+        foreach ($projectClientPairs as $pair) {
+            $this->db->or_group_start();
+            $this->db->where('project_id', $pair['project_id']);
+            $this->db->where('client_id', $pair['client_id']);
+            $this->db->group_end();
+        }
+
+        $this->db->group_end();
+
+        $query = $this->db->get()->row();
+
+        return $query->number_of_seats ?? 0;
+    }
+
+    public function get_approved_center_count($table, $clientID, $project_id)
+    {
+        if (empty($clientID)) {
+            return 0;
+        }
+
+        // Get all approved center_ids for this client
+        $this->db->select('center_id');
+        $this->db->distinct();  // Get unique center_ids
+        $this->db->from($table);
+        $this->db->where('client_id', $clientID);
+        $this->db->where('project_id', $project_id);
+        $this->db->where('client_status', 1);  // Assuming 1 means approved
+        $this->db->where('exam_center_status', 1);  // Assuming 1 means approved
+        $this->db->where('admin_status', 1);
+        $results = $this->db->get()->result_array();
+
+        if (empty($results)) {
+            return 0;
+        }
+
+        // Return the count of distinct approved centers
+        return count($results);
+    }
+
+    public function get_total_booked_seat_of_client($table, $clientID)
+    {
+        if (empty($clientID)) {
+            return 0;
+        }
+
+        $result = $this->db
+            ->select('SUM(center_seat) AS booked_seats')
+            ->from($table)
+            ->where('client_id', $clientID)
+            ->where('client_status', 1)
+            ->where('exam_center_status', 1)
+            ->where('admin_status', 1)
+            ->get()
+            ->row();
+
+        return (int)($result->booked_seats ?? 0);
+    }
+
+    public function get_number_of_seats_of_client($table, $clientID)
+    {
+        if (empty($clientID)) {
+            return 0;
+        }
+
+        // Step 1: Get all project_id and client_id combinations
+        $this->db->select('project_id, client_id');
+        $this->db->from($table);
+        $this->db->where('client_id', $clientID);
+        $this->db->where('client_status', 1);
+        $this->db->where('exam_center_status', 1);
+        $this->db->where('admin_status', 1);
+        $results = $this->db->get()->result_array();
+
+        if (empty($results)) {
+            return 0;
+        }
+
+        // Extract unique project/client combinations
+        $projectClientPairs = [];
+        foreach ($results as $row) {
+            $key = $row['project_id'] . '-' . $row['client_id'];
+            $projectClientPairs[$key] = [
+                'project_id' => $row['project_id'],
+                'client_id' => $row['client_id']
+            ];
+        }
+
+        // Step 2: Build WHERE conditions for batch fetch
+        $this->db->select_sum('number_of_seats');
+        $this->db->from('tt_project_detail');
+        $this->db->where('deleted', 0);
+        $this->db->group_start();
+
+        foreach ($projectClientPairs as $pair) {
+            $this->db->or_group_start();
+            $this->db->where('project_id', $pair['project_id']);
+            $this->db->where('client_id', $pair['client_id']);
+            $this->db->group_end();
+        }
+
+        $this->db->group_end();
+
+        $query = $this->db->get()->row();
+
+        return $query->number_of_seats ?? 0;
+    }
+
+
+    public function get_calendar_booking_data($clientID)
+    {
+        $today = date('Y-m-d');
+
+        // Fetch distinct projects for the client
+        $this->db->select('
+          proj.project_id,
+          proj.exam_type_detail,
+          proj.exam_name,
+          proj.start_date,
+          proj.end_date,
+          proj.client_id,
+          SUM(proj.number_of_seats) AS total_required
+      ');
+        $this->db->from('tt_project_detail proj');
+        $this->db->where('proj.client_id', $clientID);
+        $this->db->where('proj.deleted', 0);
+        $this->db->group_by('proj.project_id');
+        $projects = $this->db->get()->result();
+
+        $result = [];
+
+        foreach ($projects as $project) {
+            // Get city wise requirements and booked seats
+            $cities = $this->db->query("
+              SELECT 
+                  city.city_id, 
+                  city.city_name, 
+                  proj.number_of_seats AS required,
+                  COALESCE(SUM(r.center_seat), 0) AS booked
+              FROM tt_project_detail proj
+              JOIN tt_city_master city 
+                  ON proj.exam_city_id = city.city_id
+              LEFT JOIN tt_send_booking_request r 
+                  ON r.project_id = proj.project_id 
+                  AND r.city_id = city.city_id
+                  AND r.client_status = 1 
+                  AND r.exam_center_status = 1
+                  AND r.admin_status = 1
+              WHERE proj.project_id = ? 
+                AND proj.deleted = 0
+              GROUP BY city.city_id, proj.number_of_seats
+          ", [$project->project_id])->result();
+
+            $allCitiesCovered = true;
+            $totalBooked = 0;
+            $cityNames = [];
+
+            foreach ($cities as $c) {
+                $cityNames[] = $c->city_name;
+                $totalBooked += $c->booked;
+
+                // If any city is not fully covered, mark as false
+                if ((int)$c->booked < (int)$c->required) {
+                    $allCitiesCovered = false;
+                }
+            }
+
+            // Skip this project if not all cities are covered
+            if (!$allCitiesCovered) {
+                continue;
+            }
+
+            // Add only fully covered projects
+            $project->total_cities = count($cities);
+            $project->city_names = implode(', ', $cityNames);
+            $project->total_booked = $totalBooked;
+
+            // Status
+            $start_date = new DateTime($project->start_date);
+            $end_date   = new DateTime($project->end_date);
+            $current    = new DateTime();
+
+            if ($current < $start_date) {
+                $project->status = "Upcoming";
+            } elseif ($current >= $start_date && $current <= $end_date) {
+                $project->status = "In progress";
+            } else {
+                $project->status = "Completed";
+            }
+
+            $result[] = $project;
+        }
+
+        // Sort projects by start date
+        usort($result, fn($a, $b) => strtotime($a->start_date) - strtotime($b->start_date));
+
+        return $result;
+    }
+
+
+    public function phone_exists($phone)
+    {
+        $this->db->where('mobile_phone', $phone);
+        $query = $this->db->get('tt_admin_users');
+        return $query->num_rows() > 0;
+    }
+
+    public function check_phone_exists($phone)
+    {
+        $this->db->where('mobile_phone', $phone);
+        $query = $this->db->get('tt_admin_users');
+        return $query->num_rows() > 0;
+    }
+
+
+    public function get_city_wise_seat_summary($project_id, $client_id)
+    {
+        return $this->db->query("
+            SELECT
+                c.city_id,
+                c.city_name,
+                p.number_of_seats AS total_seats,
+
+                IFNULL((
+                    SELECT SUM(req.center_seat)
+                    FROM tt_send_booking_request req
+                    WHERE req.project_id = p.project_id
+                      AND req.city_id = p.exam_city_id
+                      AND req.client_id = ?
+                      AND req.exam_center_status = 1
+                      AND req.client_status = 1
+                      AND req.admin_status = 1
+                ),0) AS booked_seats
+
+            FROM tt_project_detail p
+
+            LEFT JOIN tt_city_master c
+                ON c.city_id = p.exam_city_id
+
+            WHERE p.project_id = ?
+              AND p.deleted = 0
+
+            ORDER BY c.city_name
+        ", [$client_id, $project_id])->result_array();
+    }
+
+
+    public function get_total_assessed_candidates($client_id)
+    {
+        $this->db->select('
+            p.project_id,
+            p.exam_city_id,
+            SUM(p.number_of_seats) AS total_seats,
+            SUM(
+                CASE
+                    WHEN req.exam_center_status = 1
+                    AND req.admin_status = 1
+                    AND req.client_status = 1
+                    THEN IFNULL(req.center_seat, 0)
+                    ELSE 0
+                END
+            ) AS assigned_capacity
+        ');
+
+        $this->db->from('tt_project_detail p');
+
+        $this->db->join(
+            'tt_send_booking_request req',
+            'req.project_id = p.project_id
+            AND req.city_id = p.exam_city_id
+            AND req.client_id = ' . $this->db->escape($client_id),
+            'left'
+        );
+
+        $this->db->where('p.client_id', $client_id);
+        $this->db->where('p.deleted', 0);
+
+        $this->db->group_by([
+            'p.project_id',
+            'p.exam_city_id'
+        ]);
+
+        $rows = $this->db->get()->result_array();
+
+        $assessed = 0;
+        $required = 0;
+
+        foreach ($rows as $row) {
+
+            $reqSeats = (int)$row['total_seats'];
+            $assigned = (int)$row['assigned_capacity'];
+
+            $assessed += min($assigned, $reqSeats);
+            $required += $reqSeats;
+        }
+
+        return [
+            'assessed' => $assessed,
+            'required' => $required
+        ];
+    }
+
+    public function get_total_cities_covered($ac_id)
+    {
+        $this->db->select('COUNT(DISTINCT city_id) as total_cities');
+        $this->db->from('tt_send_booking_request');
+        $this->db->where('client_id', $ac_id);
+        $query = $this->db->get();
+        return $query->row();
+    }
+}

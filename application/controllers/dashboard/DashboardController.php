@@ -68,8 +68,10 @@ class DashboardController extends CI_Controller
                 $endDate = new DateTime($booking->end_date);
 
                 // Apply tab filter if specified
-                if ($tab === 'past' && $endDate >= $today) continue;
-                if ($tab === 'upcoming' && $endDate < $today) continue;
+                if ($tab === 'past' && $endDate >= $today)
+                    continue;
+                if ($tab === 'upcoming' && $endDate < $today)
+                    continue;
 
                 $filteredBookings[] = $booking;
             }
@@ -154,8 +156,10 @@ class DashboardController extends CI_Controller
         $start = new DateTime($booking->start_date);
         $end = new DateTime($booking->end_date);
 
-        if ($today < $start) return "Upcoming";
-        if ($today <= $end) return "In Progress";
+        if ($today < $start)
+            return "Upcoming";
+        if ($today <= $end)
+            return "In Progress";
         return "Completed";
     }
 
@@ -187,7 +191,7 @@ class DashboardController extends CI_Controller
 
         if (!$ac_id) {
             echo json_encode([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Invalid account.'
             ]);
             return;
@@ -207,7 +211,7 @@ class DashboardController extends CI_Controller
         // Stop if related records exist
         if ($projectCount > 0 || $bookingCount > 0) {
             echo json_encode([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Account cannot be deleted because bookings or projects are associated with this account.'
             ]);
             return;
@@ -220,7 +224,7 @@ class DashboardController extends CI_Controller
         $this->Common_model->UpdateRecord('tt_client', $data, ['ac_id' => $ac_id]);
 
         echo json_encode([
-            'status'  => true,
+            'status' => true,
             'message' => 'Account deleted successfully.'
         ]);
     }
@@ -252,8 +256,8 @@ class DashboardController extends CI_Controller
         $tt_admin_users = $this->Common_model->getdata('tt_admin_users', ['id' => $ac_id]);
 
         $city_name_val = $this->input->post('city_id');
-        $citySeats     = $this->input->post('city_seats');
-        $cityBatches   = $this->input->post('batch');
+        $citySeats = $this->input->post('city_seats');
+        $cityBatches = $this->input->post('batch');
 
         $cityCount = count($city_name_val);
 
@@ -278,12 +282,12 @@ class DashboardController extends CI_Controller
 
             // Ac Details
             $projectData = [
-                'project_id'    => $project_group_id,
-                'client_id'     => $ac_id,
-                'created_by'    => $ac_id,
-                'client_name'   => $tt_admin_users->username,
-                'exam_name'    => $this->input->post('exam_name'),
-                'exam_type'    => $this->input->post('exam_category'),
+                'project_id' => $project_group_id,
+                'client_id' => $ac_id,
+                'created_by' => $ac_id,
+                'client_name' => $tt_admin_users->username,
+                'exam_name' => $this->input->post('exam_name'),
+                'exam_type' => $this->input->post('exam_category'),
                 "state_id" => $state_ids,
                 "exam_city_id" => $cityId,
                 "exam_city_name" => $this->common_options->get_city_name($cityId),
@@ -294,37 +298,37 @@ class DashboardController extends CI_Controller
                     : 0,
 
                 'batch1_start' => null,
-                'batch1_end'   => null,
+                'batch1_end' => null,
 
                 'batch2_start' => null,
-                'batch2_end'   => null,
+                'batch2_end' => null,
 
                 'batch3_start' => null,
-                'batch3_end'   => null,
+                'batch3_end' => null,
 
                 'batch4_start' => null,
-                'batch4_end'   => null,
+                'batch4_end' => null,
 
                 'batch5_start' => null,
-                'batch5_end'   => null,
+                'batch5_end' => null,
                 'exam_mode' => $this->input->post('exam_mode'),
                 'inet_mode_os' => $this->input->post('operating_system'),
-                'inet_mode_ram'    => $this->input->post('ram'),
+                'inet_mode_ram' => $this->input->post('ram'),
                 'inet_mode_display' => $this->input->post('display_resolution'),
                 'inet_mode_internet_each' => $this->input->post('internet_on_each_device') ?? 0,
 
                 'parking_facility' => $this->input->post('parking') ?? 0,
                 'security_guard' => $this->input->post('security_guard') ?? 'male',
                 'locker_facility' => $this->input->post('lockers') ?? 0,
-                'waiting_area'        => $this->input->post('waiting_area') ?? 0,
+                'waiting_area' => $this->input->post('waiting_area') ?? 0,
                 'power_backup' => $this->input->post('power_backup') ?? 0,
                 'ph_handicaped' => $this->input->post('ph_handicapped') ?? 0,
-                'printer'    => $this->input->post('printer') ?? 0,
+                'printer' => $this->input->post('printer') ?? 0,
                 'rough_sheet' => $this->input->post('rough_sheet') ?? 0,
                 'partition_in_lab' => $this->input->post('partition') ?? 0,
                 'ac_in_lab' => $this->input->post('ac_in_lab') ?? 0,
-                'cctv_required'         => $this->input->post('cctv_required') ?? 0,
-                'cctv_recording'         => $this->input->post('cctv_recording') ?? 0,
+                'cctv_required' => $this->input->post('cctv_required') ?? 0,
+                'cctv_recording' => $this->input->post('cctv_recording') ?? 0,
 
                 "tech_person_count" => $tech_person_count,
                 "center_suptn_count" => $center_suptn_count,
@@ -337,8 +341,8 @@ class DashboardController extends CI_Controller
                 "security_guard_male" => $security_guard_male,
                 "security_guard_female" => $security_guard_female,
 
-                "number_of_seats"   => isset($citySeats[$cityId]) ? $citySeats[$cityId] : 0,
-                "exam_required_seat"   => isset($citySeats[$cityId]) ? $citySeats[$cityId] : 0,
+                "number_of_seats" => isset($citySeats[$cityId]) ? $citySeats[$cityId] : 0,
+                "exam_required_seat" => isset($citySeats[$cityId]) ? $citySeats[$cityId] : 0,
                 "price_per_seat" => $this->input->post('price_per_seat'),
                 "admin_price_per_seat" => $this->input->post('price_per_seat'),
 
@@ -359,7 +363,7 @@ class DashboardController extends CI_Controller
                 "client_negotiation_status" => 0,
 
                 'created_on' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->created_on
                     : $updated_at,
                 'last_modified_on' => $updated_at,
@@ -376,15 +380,15 @@ class DashboardController extends CI_Controller
 
                         'project_id' => $project_group_id,
 
-                        'city_id'    => $cityId,
+                        'city_id' => $cityId,
 
-                        'batch_no'   => $batchNo,
+                        'batch_no' => $batchNo,
 
                         'batch_start' => $batch['start'],
 
-                        'batch_end'  => $batch['end'],
+                        'batch_end' => $batch['end'],
 
-                        'seat'       => $batch['seat'],
+                        'seat' => $batch['seat'],
 
                         'created_at' => $created_at,
 
@@ -455,14 +459,14 @@ class DashboardController extends CI_Controller
         // Notification data
         $notification_data = [
             'admin_user_id' => $tt_admin_users->id,
-            'center_id'     => null,
-            'client_id'     => $ac_id,
-            'title'         => $notification_title,
-            'message'       => $notification_message,
-            'type'          => 'admin',
-            'is_read'       => 0,
-            'is_remove'     => 0,
-            'created_at'    => date('Y-m-d H:i:s')
+            'center_id' => null,
+            'client_id' => $ac_id,
+            'title' => $notification_title,
+            'message' => $notification_message,
+            'type' => 'admin',
+            'is_read' => 0,
+            'is_remove' => 0,
+            'created_at' => date('Y-m-d H:i:s')
         ];
 
         // Insert notification
@@ -530,15 +534,15 @@ class DashboardController extends CI_Controller
 
     public function updateProject()
     {
-        $ac_id      = $this->session->userdata('ac_id');
+        $ac_id = $this->session->userdata('ac_id');
         $updated_at = date('Y-m-d H:i:s');
 
         $project_id = $this->input->post('project_id');
 
-        $city_ids   = $this->input->post('city_id');
+        $city_ids = $this->input->post('city_id');
         $city_ids = array_map('intval', $city_ids);
         $city_seats = $this->input->post('city_seats');
-        $batchData  = $this->input->post('batch');
+        $batchData = $this->input->post('batch');
 
         $invigilator_ratio =
             $this->input->post('invigilator_ratio_1') .
@@ -626,7 +630,7 @@ class DashboardController extends CI_Controller
 
             // Get sanitized seat value
             $seat = isset($city_seats[$cityId])
-                ? (int)$city_seats[$cityId]
+                ? (int) $city_seats[$cityId]
                 : 0;
 
             // =====================
@@ -649,7 +653,7 @@ class DashboardController extends CI_Controller
                 $isRequirementChanged = 1;
             } else {
                 // Seat Updated
-                if ((int)$oldProject->number_of_seats != $seat) {
+                if ((int) $oldProject->number_of_seats != $seat) {
                     saveProjectChangeLog(
                         $project_id,
                         $cityId,
@@ -705,11 +709,11 @@ class DashboardController extends CI_Controller
 
                 // Individual batch seat changes (only for existing batches)
                 foreach ($batchData[$cityId] as $batchNo => $batch) {
-                    $newSeat = (int)$batch['seat'];
+                    $newSeat = (int) $batch['seat'];
 
                     // ✅ Only log if batch already existed
                     if (isset($oldBatchMap[$batchNo])) {
-                        $oldSeat = (int)$oldBatchMap[$batchNo];
+                        $oldSeat = (int) $oldBatchMap[$batchNo];
 
                         if ($oldSeat != $newSeat) {
                             saveProjectChangeLog(
@@ -718,11 +722,11 @@ class DashboardController extends CI_Controller
                                 'BATCH_SEAT_UPDATED',
                                 [
                                     'batch' => $batchNo,
-                                    'seat'  => $oldSeat
+                                    'seat' => $oldSeat
                                 ],
                                 [
                                     'batch' => $batchNo,
-                                    'seat'  => $newSeat
+                                    'seat' => $newSeat
                                 ],
                                 $ac_id
                             );
@@ -748,74 +752,74 @@ class DashboardController extends CI_Controller
             $defaultAmount = $seat * $this->input->post('price_per_seat');
 
             $updateData = [
-                'project_id'     => $project_id,
-                'client_id'      => $ac_id,
-                'client_name'    => $this->input->post('client_name'),
-                'exam_name'      => $this->input->post('exam_name'),
-                'exam_type'      => $this->input->post('exam_category'),
-                'state_id'       => $state_id,
-                'exam_city_id'   => $cityId,
+                'project_id' => $project_id,
+                'client_id' => $ac_id,
+                'client_name' => $this->input->post('client_name'),
+                'exam_name' => $this->input->post('exam_name'),
+                'exam_type' => $this->input->post('exam_category'),
+                'state_id' => $state_id,
+                'exam_city_id' => $cityId,
                 'exam_city_name' => $this->common_options->get_city_name($cityId),
-                'start_date'     => $this->input->post('start_date'),
-                'end_date'       => $this->input->post('end_date'),
+                'start_date' => $this->input->post('start_date'),
+                'end_date' => $this->input->post('end_date'),
                 'total_batch' => isset($batchData[$cityId])
                     ? count($batchData[$cityId])
                     : 0,
-                'exam_mode'      => $this->input->post('exam_mode'),
-                'inet_mode_os'              => $this->input->post('operating_system'),
-                'inet_mode_ram'             => $this->input->post('ram'),
-                'inet_mode_display'         => $this->input->post('display_resolution'),
-                'inet_mode_internet_each'   => $this->input->post('internet_on_each_device') ?? 0,
-                'parking_facility'  => $this->input->post('parking') ?? 0,
-                'security_guard'    => $this->input->post('security_guard') ?? 'male',
-                'locker_facility'   => $this->input->post('lockers') ?? 0,
-                'waiting_area'      => $this->input->post('waiting_area') ?? 0,
-                'power_backup'      => $this->input->post('power_backup') ?? 0,
-                'ph_handicaped'     => $this->input->post('ph_handicapped') ?? 0,
-                'printer'           => $this->input->post('printer') ?? 0,
-                'rough_sheet'       => $this->input->post('rough_sheet') ?? 0,
-                'partition_in_lab'  => $this->input->post('partition') ?? 0,
-                'ac_in_lab'         => $this->input->post('ac_in_lab') ?? 0,
-                'cctv_required'     => $this->input->post('cctv_required') ?? 0,
-                'cctv_recording'    => $this->input->post('cctv_recording') ?? 0,
-                'tech_person_count'   => $this->input->post('tech_person_count'),
-                'center_suptn_count'  => $this->input->post('center_suptn_count'),
-                'invigilator_ratio'    => $invigilator_ratio,
+                'exam_mode' => $this->input->post('exam_mode'),
+                'inet_mode_os' => $this->input->post('operating_system'),
+                'inet_mode_ram' => $this->input->post('ram'),
+                'inet_mode_display' => $this->input->post('display_resolution'),
+                'inet_mode_internet_each' => $this->input->post('internet_on_each_device') ?? 0,
+                'parking_facility' => $this->input->post('parking') ?? 0,
+                'security_guard' => $this->input->post('security_guard') ?? 'male',
+                'locker_facility' => $this->input->post('lockers') ?? 0,
+                'waiting_area' => $this->input->post('waiting_area') ?? 0,
+                'power_backup' => $this->input->post('power_backup') ?? 0,
+                'ph_handicaped' => $this->input->post('ph_handicapped') ?? 0,
+                'printer' => $this->input->post('printer') ?? 0,
+                'rough_sheet' => $this->input->post('rough_sheet') ?? 0,
+                'partition_in_lab' => $this->input->post('partition') ?? 0,
+                'ac_in_lab' => $this->input->post('ac_in_lab') ?? 0,
+                'cctv_required' => $this->input->post('cctv_required') ?? 0,
+                'cctv_recording' => $this->input->post('cctv_recording') ?? 0,
+                'tech_person_count' => $this->input->post('tech_person_count'),
+                'center_suptn_count' => $this->input->post('center_suptn_count'),
+                'invigilator_ratio' => $invigilator_ratio,
                 'security_guard_ratio' => $security_ratio,
-                'invigilator_male'      => $this->input->post('invigilator_male'),
-                'invigilator_female'    => $this->input->post('invigilator_female'),
-                'security_guard_male'   => $this->input->post('security_guard_male'),
+                'invigilator_male' => $this->input->post('invigilator_male'),
+                'invigilator_female' => $this->input->post('invigilator_female'),
+                'security_guard_male' => $this->input->post('security_guard_male'),
                 'security_guard_female' => $this->input->post('security_guard_female'),
-                'number_of_seats'     => $seat,
-                'exam_required_seat'  => $seat,
-                'price_per_seat'       => $this->input->post('price_per_seat'),
+                'number_of_seats' => $seat,
+                'exam_required_seat' => $seat,
+                'price_per_seat' => $this->input->post('price_per_seat'),
                 'admin_price_per_seat' => $this->input->post('price_per_seat'),
                 'client_negotiate_amount' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->client_negotiate_amount
                     : $defaultAmount,
                 'admin_client_final_amount' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->admin_client_final_amount
                     : $defaultAmount,
                 'client_negotiate_remark' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->client_negotiate_remark
                     : NULL,
                 'client_negotiation_status' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->client_negotiation_status
                     : 0,
                 'client_negotiation_updated_at' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->client_negotiation_updated_at
                     : NULL,
                 'status' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->status
                     : 0,
                 'valid' =>
-                $oldProject
+                    $oldProject
                     ? $oldProject->valid
                     : 1,
                 'deleted' => 0,
@@ -869,12 +873,12 @@ class DashboardController extends CI_Controller
                         'tt_project_batch_detail',
                         [
                             'project_id' => $project_id,
-                            'city_id'    => $cityId,
-                            'batch_no'   => $batchNo,
+                            'city_id' => $cityId,
+                            'batch_no' => $batchNo,
                             'batch_start' => $batch['start'] ?? NULL,
-                            'batch_end'   => $batch['end'] ?? NULL,
+                            'batch_end' => $batch['end'] ?? NULL,
                             'seat' => isset($batch['seat'])
-                                ? (int)$batch['seat']
+                                ? (int) $batch['seat']
                                 : 0,
                             'created_at' => $updated_at,
                             'updated_at' => $updated_at
@@ -891,18 +895,66 @@ class DashboardController extends CI_Controller
         if ($this->db->trans_status() === FALSE) {
             $this->db->trans_rollback();
             echo json_encode([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => 'Something went wrong.'
             ]);
         } else {
             $this->db->trans_commit();
             echo json_encode([
-                'status'  => 'success',
+                'status' => 'success',
                 'message' => 'Project updated successfully.'
             ]);
         }
 
         exit;
+    }
+
+
+    public function deleteProject()
+    {
+        $project_id = $this->input->post('project_id');
+        $client_id = $this->session->userdata('ac_id'); // client account id
+
+        if (!$project_id || !$client_id) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'Invalid request.'
+            ]);
+            return;
+        }
+
+        // Check if any booking exists for this project
+        $this->db->from('tt_send_booking_request');
+        $this->db->where('project_id', $project_id);
+        $bookingCount = $this->db->count_all_results();
+
+        // ❌ If booking exists → block delete
+        if ($bookingCount > 0) {
+            echo json_encode([
+                'status' => false,
+                'message' => 'This project cannot be deleted because bookings already exist.'
+            ]);
+            return;
+        }
+
+        // Safe soft delete
+        $updateData = [
+            'deleted' => 1
+        ];
+
+        $this->Common_model->UpdateRecord(
+            'tt_project_detail',
+            $updateData,
+            [
+                'project_id' => $project_id,
+                'client_id' => $client_id
+            ]
+        );
+
+        echo json_encode([
+            'status' => true,
+            'message' => 'Project deleted successfully.'
+        ]);
     }
 
 
@@ -931,10 +983,10 @@ class DashboardController extends CI_Controller
         $adjustedRequired = 0;
 
         foreach ($data['cityWiseSummary'] as $city) {
-            $reqSeats = (int)($city['total_seats'] ?? 0);
-            $booked   = (int)($city['booked_seats'] ?? 0);
+            $reqSeats = (int) ($city['total_seats'] ?? 0);
+            $booked = (int) ($city['booked_seats'] ?? 0);
 
-            $adjustedBooked   += min($booked, $reqSeats); // cap booked at required
+            $adjustedBooked += min($booked, $reqSeats); // cap booked at required
             $adjustedRequired += $reqSeats;
         }
 
@@ -969,14 +1021,14 @@ class DashboardController extends CI_Controller
 
     public function upateCenterBookingStatus()
     {
-        $center_id  = $this->input->post('center_id');
+        $center_id = $this->input->post('center_id');
         $project_id = $this->input->post('project_id');
-        $type       = $this->input->post('type');
+        $type = $this->input->post('type');
 
         if (empty($center_id) || empty($project_id) || empty($type)) {
 
             echo json_encode([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Invalid request.'
             ]);
             exit;
@@ -985,12 +1037,12 @@ class DashboardController extends CI_Controller
         $client_status = ($type == 'approve') ? 1 : 2;
 
         $where = [
-            'center_id'  => $center_id,
+            'center_id' => $center_id,
             'project_id' => $project_id
         ];
 
         $data = [
-            'client_status'              => $client_status,
+            'client_status' => $client_status,
             'client_accept_booking_date' => date('Y-m-d H:i:s')
         ];
 
@@ -1001,7 +1053,7 @@ class DashboardController extends CI_Controller
         );
 
         echo json_encode([
-            'status'  => true,
+            'status' => true,
             'message' => 'Booking status updated successfully.'
         ]);
         exit;
@@ -1078,13 +1130,29 @@ class DashboardController extends CI_Controller
     }
 
 
+    public function mySettings()
+    {
+        $ac_id = $this->session->userdata('ac_id');
+        $data['result'] = $this->Common_model->getSignleClientData($ac_id);
+        $data['city'] = $this->Common_model->getdata_array('tt_city_master', []);
+        $data['state'] = $this->Common_model->getdata_array('tt_states', []);
+
+        $data['settigData'] = $this->Common_model->getdata_array('custom_settings', '');
+
+        $this->load->view('layouts/header');
+        $this->load->view('layouts/sidebar');
+        $this->load->view('dashboard/my-setting', $data);
+        $this->load->view('layouts/footer');
+    }
+
+
     public function updateProfilePicture()
     {
         $ac_id = $this->session->userdata('ac_id');
         if (!empty($_FILES['logo']['name'])) {
-            $config['upload_path']   = './uploads/client_logo/';
+            $config['upload_path'] = './uploads/client_logo/';
             $config['allowed_types'] = 'jpg|jpeg|png|gif';
-            $config['file_name']     = time() . '_' . $_FILES['logo']['name'];
+            $config['file_name'] = time() . '_' . $_FILES['logo']['name'];
 
             $this->load->library('upload', $config);
 
@@ -1105,22 +1173,6 @@ class DashboardController extends CI_Controller
     }
 
 
-    public function mySettings()
-    {
-        $ac_id = $this->session->userdata('ac_id');
-        $data['result'] = $this->Common_model->getSignleClientData($ac_id);
-        $data['city'] = $this->Common_model->getdata_array('tt_city_master', []);
-        $data['state'] = $this->Common_model->getdata_array('tt_states', []);
-
-        $data['settigData'] = $this->Common_model->getdata_array('custom_settings', '');
-
-        $this->load->view('layouts/header');
-        $this->load->view('layouts/sidebar');
-        $this->load->view('dashboard/my-setting', $data);
-        $this->load->view('layouts/footer');
-    }
-
-
     public function updateCompanyInformation()
     {
         $ac_id = $this->session->userdata('ac_id');
@@ -1129,8 +1181,8 @@ class DashboardController extends CI_Controller
         $company_name = $this->input->post('company_name');
 
         $data = [
-            'company_name'     => $company_name,
-            'company_type'     => $this->input->post('company_type'),
+            'company_name' => $company_name,
+            'company_type' => $this->input->post('company_type'),
             'address' => $this->input->post('address'),
             'state' => $this->input->post('state'),
             'city' => $this->input->post('city'),
@@ -1272,55 +1324,6 @@ class DashboardController extends CI_Controller
         fclose($output);
         exit;
     }
-
-
-    public function deleteProject()
-    {
-        $project_id = $this->input->post('project_id');
-        $client_id  = $this->session->userdata('ac_id'); // client account id
-
-        if (!$project_id || !$client_id) {
-            echo json_encode([
-                'status'  => false,
-                'message' => 'Invalid request.'
-            ]);
-            return;
-        }
-
-        // Check if any booking exists for this project
-        $this->db->from('tt_send_booking_request');
-        $this->db->where('project_id', $project_id);
-        $bookingCount = $this->db->count_all_results();
-
-        // ❌ If booking exists → block delete
-        if ($bookingCount > 0) {
-            echo json_encode([
-                'status'  => false,
-                'message' => 'This project cannot be deleted because bookings already exist.'
-            ]);
-            return;
-        }
-
-        // Safe soft delete
-        $updateData = [
-            'deleted' => 1
-        ];
-
-        $this->Common_model->UpdateRecord(
-            'tt_project_detail',
-            $updateData,
-            [
-                'project_id' => $project_id,
-                'client_id'  => $client_id
-            ]
-        );
-
-        echo json_encode([
-            'status'  => true,
-            'message' => 'Project deleted successfully.'
-        ]);
-    }
-
 
 
     public function openClientNegotiationModal()
@@ -1473,16 +1476,16 @@ class DashboardController extends CI_Controller
             ->update('tt_project_detail', [
 
                 // Client Latest Demand
-                'client_negotiate_amount'      => $finalAmount,
+                'client_negotiate_amount' => $finalAmount,
 
                 // Admin Final Amount bhi same ho jayega
                 // jab tak admin counter na de
-                'admin_client_final_amount'    => $finalAmount,
+                'admin_client_final_amount' => $finalAmount,
 
-                'client_negotiate_remark'      => $remark,
+                'client_negotiate_remark' => $remark,
 
                 // Client Requested
-                'client_negotiation_status'    => 1
+                'client_negotiation_status' => 1
 
             ]);
 

@@ -107,3 +107,76 @@ $route['dashboard/client-project/negotiation-history'] =
 'dashboard/DashboardController/getClientNegotiationHistory';
 $route['dashboard/client-project/accept-negotiation'] =
 'dashboard/DashboardController/acceptClientNegotiation';
+
+
+
+// ==================================API===============================
+
+// =========================
+// Client API ROUTES (v1)
+// =========================
+$route['api/v1/client/check-phone-exists']        = 'api/v1/AuthAPIController/checkPhoneExists';
+$route['api/v1/client/send-otp']                  = 'api/v1/AuthAPIController/sendOtp';
+$route['api/v1/client/resend-otp']                = 'api/v1/AuthAPIController/resendOtp';
+$route['api/v1/client/verify-otp']                = 'api/v1/AuthAPIController/verifyOtp';
+
+$route['api/v1/client/forgot-mpin/send-otp']      = 'api/v1/AuthAPIController/sendForgotMpinOtp';
+$route['api/v1/client/forgot-mpin/verify-otp']    = 'api/v1/AuthAPIController/verifyForgotMpinOtp';
+$route['api/v1/client/forgot-mpin/reset']         = 'api/v1/AuthAPIController/resetForgotMpin';
+
+
+$route['api/v1/client/register']                  = 'api/v1/AuthAPIController/doRegister';
+$route['api/v1/client/login']                     = 'api/v1/AuthAPIController/login';
+$route['api/v1/client/logout']                    = 'api/v1/AuthAPIController/logout';
+
+
+// =========================
+// COMMON API ROUTES (v1)
+// =========================
+$route['api/v1/get-country-list'] = 'api/v1/CommmonAPIController/getCountryList';
+$route['api/v1/get-state-list'] = 'api/v1/CommmonAPIController/getStateList';
+$route['api/v1/get-city-list'] = 'api/v1/CommmonAPIController/getCityList';
+$route['api/v1/get-bank-name'] = 'api/v1/CommmonAPIController/getBankName';
+$route['api/v1/get-all-cities'] = 'api/v1/CommmonAPIController/getAllCities';
+
+// =========================
+// DASHBOARD API ROUTES (v1)
+// =========================
+$route['api/v1/client/dashboard']        = 'api/v1/DashboardAPIController/dashboard';
+$route['api/v1/client/delete-account']   = 'api/v1/DashboardAPIController/deleteAccount';
+
+
+// =========================
+// PROJECT API ROUTES (v1)
+// =========================
+$route['api/v1/client/create-project']   = 'api/v1/ProjectAPIController/createProject';
+$route['api/v1/client/edit-project/(:any)'] = 'api/v1/ProjectAPIController/editProject/$1';
+$route['api/v1/client/update-project']   = 'api/v1/ProjectAPIController/updateProject';
+$route['api/v1/client/get-project-detail']   = 'api/v1/ProjectAPIController/detailProject';
+$route['api/v1/client/delete-project']   = 'api/v1/ProjectAPIController/deleteProject';
+$route['api/v1/client/view-project-detail']   = 'api/v1/ProjectAPIController/viewProjectDetail';
+$route['api/v1/client/view-exam-center-detail']   = 'api/v1/ProjectAPIController/detailExamCenter';
+$route['api/v1/client/update-center-booking-status']   = 'api/v1/ProjectAPIController/updateCenterBookingStatus';
+
+// =========================
+// CALENDAR API ROUTES (v1)
+// =========================
+$route['api/v1/client/calendar']   = 'api/v1/CalendarAPIController/myCalendar';
+
+
+// =========================
+// SETTING API ROUTES (v1)
+// =========================
+$route['api/v1/client/settings']   = 'api/v1/SettingAPIController/mySettings';
+$route['api/v1/client/update-profile-picture']   = 'api/v1/SettingAPIController/updateProfilePicture';
+$route['api/v1/client/update-company-information']   = 'api/v1/SettingAPIController/updateCompanyInformation';
+$route['api/v1/client/update-personal-information']   = 'api/v1/SettingAPIController/updatePersonalInformation';
+
+
+// =========================
+// NEGOTIATION API ROUTES (v1)
+// =========================
+$route['api/v1/client/fetch-negotiation-data'] = 'api/v1/NegotiationAPIController/fetchNegotiationData';
+$route['api/v1/client/save-negotiation'] = 'api/v1/NegotiationAPIController/saveClientNegotiation';
+$route['api/v1/client/get-negotiation-history'] = 'api/v1/NegotiationAPIController/getClientNegotiationHistory';
+$route['api/v1/client/accept-negotiation'] = 'api/v1/NegotiationAPIController/acceptClientNegotiation';
