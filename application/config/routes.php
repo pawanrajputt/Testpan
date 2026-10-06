@@ -66,11 +66,9 @@ $route['subscription-history']
 
 // Center Dashboard
 $route['dashboard']='booking/DashboardController/dashboard';
-$route['my-center']='booking/DashboardController/myCenter';
-$route['request-profile-edit']='booking/DashboardController/requestProfileEdit';
+
+
 $route['my-calendar']='booking/DashboardController/myCalendar';
-$route['my-self-booking']='booking/DashboardController/mySelfBooking';
-$route['export-self-booking']='booking/DashboardController/exportSelfBooking';
 $route['update-exam-center-data']='booking/DashboardController/updateExamCenterData';
 $route['remove-images']='booking/DashboardController/removeImages';
 $route['detail-project']='booking/DashboardController/detailProject';
@@ -78,49 +76,61 @@ $route['update-booking-status']='booking/DashboardController/updateBookingStatus
 $route['fetch-reject-booking-content']='booking/DashboardController/fetchRejectBookingContent';
 $route['fetch-negotiate-booking-content']='booking/DashboardController/fetchNegotiateBookingContent';
 $route['reject-booking-status']='booking/DashboardController/rejectBookingStatus';
-$route['create-self-booking']='booking/DashboardController/createSelfBooking';
 $route['get_booking_details']='booking/DashboardController/get_booking_details';
-$route['get_calendar']='booking/DashboardController/get_calendar'; 
-$route['fetch-booking-view-by-id']='booking/DashboardController/fetchBookingViewById';
-$route['fetch-edit-self-booking-by-id']='booking/DashboardController/editSelfBookingById';
-$route['update-self-booking']='booking/DashboardController/updateSelfBooking';
-$route['delete-self-booking']='booking/DashboardController/deleteSelfBooking';
-$route['help-support']='booking/DashboardController/helpSupport';
-$route['settings']='booking/DashboardController/settings';
-$route['update-setting']='booking/DashboardController/updateSetting';
-$route['delete-account']='booking/DashboardController/deleteAccount';
-$route['update-center-logo']='booking/DashboardController/updateCenterLogo';
-$route['center-all-notifications']='booking/DashboardController/centerAllNotification';
-$route['center-notification-mark-all-read'] = 'booking/DashboardController/markAllRead';
-$route['center-remove-notification/(:num)'] = 'booking/DashboardController/removeNotification/$1';
+$route['get_calendar']='booking/DashboardController/get_calendar';
 
+
+// Self Booking
+$route['my-self-booking']='booking/SelfBookingController/mySelfBooking';
+$route['export-self-booking']='booking/SelfBookingController/exportSelfBooking';
+$route['create-self-booking']='booking/SelfBookingController/createSelfBooking';
+$route['fetch-booking-view-by-id']='booking/SelfBookingController/fetchBookingViewById';
+$route['fetch-edit-self-booking-by-id']='booking/SelfBookingController/editSelfBookingById';
+$route['update-self-booking']='booking/SelfBookingController/updateSelfBooking';
+$route['delete-self-booking']='booking/SelfBookingController/deleteSelfBooking';
+
+// My Center
+$route['my-center']='booking/MyCenterController/myCenter';
+$route['request-profile-edit']='booking/MyCenterController/requestProfileEdit';
+
+// My Setting
+$route['help-support']='booking/SettingController/helpSupport';
+$route['settings']='booking/SettingController/settings';
+$route['update-setting']='booking/SettingController/updateSetting';
+$route['delete-account']='booking/SettingController/deleteAccount';
+$route['update-center-logo']='booking/SettingController/updateCenterLogo';
+
+// Notification
+$route['center-all-notifications']='booking/NotificationController/centerAllNotification';
+$route['center-notification-mark-all-read'] = 'booking/NotificationController/markAllRead';
+$route['center-remove-notification/(:num)'] = 'booking/NotificationController/removeNotification/$1';
 
 // ==================================API===============================
 
 // =========================
+// OWNER AUTH API ROUTES (v1)
+// =========================
+$route['api/v1/owner/check-phone-exists']        = 'api/v1/OwnerAuthController/checkPhoneExists';
+$route['api/v1/owner/send-otp']                  = 'api/v1/OwnerAuthController/sendOtp';
+$route['api/v1/owner/resend-otp']                = 'api/v1/OwnerAuthController/resendOtp';
+$route['api/v1/owner/verify-otp']                = 'api/v1/OwnerAuthController/verifyOtp';
+$route['api/v1/owner/forgot-mpin/send-otp']      = 'api/v1/OwnerAuthController/sendForgotMpinOtp';
+$route['api/v1/owner/forgot-mpin/verify-otp']    = 'api/v1/OwnerAuthController/verifyForgotMpinOtp';
+$route['api/v1/owner/forgot-mpin/reset']         = 'api/v1/OwnerAuthController/resetForgotMpin';
+$route['api/v1/owner/register']                  = 'api/v1/OwnerAuthController/doRegister';
+$route['api/v1/owner/login']                     = 'api/v1/OwnerAuthController/login';
+$route['api/v1/owner/logout']                    = 'api/v1/OwnerAuthController/logout';
+
+// =========================
 // OWNER API ROUTES (v1)
 // =========================
-$route['api/v1/owner/check-phone-exists']        = 'api/v1/OwnerController/checkPhoneExists';
-$route['api/v1/owner/send-otp']                  = 'api/v1/OwnerController/sendOtp';
-$route['api/v1/owner/resend-otp']                = 'api/v1/OwnerController/resendOtp';
-$route['api/v1/owner/verify-otp']                = 'api/v1/OwnerController/verifyOtp';
-
-$route['api/v1/owner/forgot-mpin/send-otp']      = 'api/v1/OwnerController/sendForgotMpinOtp';
-$route['api/v1/owner/forgot-mpin/verify-otp']    = 'api/v1/OwnerController/verifyForgotMpinOtp';
-$route['api/v1/owner/forgot-mpin/reset']         = 'api/v1/OwnerController/resetForgotMpin';
-
-
-$route['api/v1/owner/register']                  = 'api/v1/OwnerController/doRegister';
-$route['api/v1/owner/login']                     = 'api/v1/OwnerController/login';
-$route['api/v1/owner/logout']                    = 'api/v1/OwnerController/logout';
-$route['api/v1/delete-owner-account']            = 'api/v1/OwnerController/deleteOwnerAccountApi';
-
 $route['api/v1/owner/dashboard']                 = 'api/v1/OwnerController/dashboard';
 $route['api/v1/owner/all-center-list']           = 'api/v1/OwnerController/allCenterListing';
 $route['api/v1/owner/profile']                   = 'api/v1/OwnerController/profile';
 $route['api/v1/owner/update-profile']            = 'api/v1/OwnerController/updateProfile';
 $route['api/v1/owner/reset-mpin']                = 'api/v1/OwnerController/resetMpin';
 $route['api/v1/owner/view-center-detail/(:num)'] = 'api/v1/OwnerController/viewCenterDetail/$1';
+$route['api/v1/delete-owner-account']            = 'api/v1/OwnerController/deleteOwnerAccountApi';
 
 // Owner Calendar
 $route['api/v1/owner/calendar']          = 'api/v1/OwnerCalendarController/get_calendar';

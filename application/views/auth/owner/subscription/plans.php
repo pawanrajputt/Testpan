@@ -2,7 +2,7 @@
     /* ============================================
        PROFESSIONAL SUBSCRIPTION STYLES
        ============================================ */
-    
+
     /* ===== MAIN CONTAINER ===== */
     .main-contant {
         max-width: 98%;
@@ -11,13 +11,13 @@
         padding: 20px;
         margin: 0 auto;
     }
-    
+
     /* ===== SECTION TITLE ===== */
     .section-title {
         text-align: center;
         padding: 30px 0 20px 0;
     }
-    
+
     .section-title h2 {
         font-size: 38px;
         font-weight: 800;
@@ -28,14 +28,14 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
-    
+
     .section-title p {
         color: #6b7280;
         margin-top: 10px;
         font-size: 16px;
         font-weight: 400;
     }
-    
+
     /* ===== ACTIVE SUBSCRIPTION BOX ===== */
     .current-plan-box {
         background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
@@ -49,12 +49,12 @@
         overflow: hidden;
         transition: all 0.3s ease;
     }
-    
+
     .current-plan-box:hover {
         box-shadow: 0 8px 35px rgba(16, 185, 129, 0.25);
         transform: translateY(-2px);
     }
-    
+
     .current-plan-box::before {
         content: '✅';
         position: absolute;
@@ -64,7 +64,7 @@
         font-size: 48px;
         opacity: 0.10;
     }
-    
+
     .current-plan-box::after {
         content: '';
         position: absolute;
@@ -75,7 +75,7 @@
         background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
         border-radius: 50%;
     }
-    
+
     .current-plan-box h5 {
         font-size: 18px;
         font-weight: 700;
@@ -87,12 +87,12 @@
         position: relative;
         z-index: 1;
     }
-    
+
     .current-plan-box h5::before {
         content: '🟢';
         font-size: 14px;
     }
-    
+
     .current-plan-box p {
         color: #065f46;
         font-size: 15px;
@@ -101,7 +101,7 @@
         z-index: 1;
         opacity: 0.85;
     }
-    
+
     .current-plan-box strong {
         color: #065f46;
         font-size: 15px;
@@ -114,21 +114,21 @@
         border-radius: 50px;
         border: 1px solid rgba(16, 185, 129, 0.2);
     }
-    
+
     .current-plan-box strong::before {
         content: '📅 ';
         font-size: 13px;
     }
-    
+
     /* ===== PLAN CARDS ===== */
     .row.g-4.justify-content-center {
         padding: 0 20px;
     }
-    
+
     .plan-section {
         padding: 25px 10px;
     }
-    
+
     .card-plan {
         background: #ffffff;
         border-radius: 24px;
@@ -142,7 +142,7 @@
         display: flex;
         flex-direction: column;
     }
-    
+
     .card-plan::before {
         content: '';
         position: absolute;
@@ -154,29 +154,29 @@
         opacity: 0;
         transition: all 0.4s ease;
     }
-    
+
     .card-plan:hover::before {
         opacity: 1;
     }
-    
+
     .card-plan:hover {
         transform: translateY(-10px);
         box-shadow: 0 25px 60px rgba(0, 0, 0, 0.10);
         border-color: #667eea;
     }
-    
+
     /* ===== PLAN HEADER ===== */
     .plan-header {
         margin-bottom: 25px;
     }
-    
+
     .plan-name {
-        font-size: 32px;
+        font-size: 28px;
         font-weight: 800;
         color: #111827;
         letter-spacing: -0.5px;
     }
-    
+
     .plan-duration {
         color: #6b7280;
         margin-top: 6px;
@@ -187,22 +187,21 @@
         background: #f3f4f6;
         border-radius: 50px;
     }
-    
+
     /* ===== PRICE ===== */
     .price {
-        font-size: 52px;
         font-weight: 800;
         color: #111827;
         margin-top: 15px;
         line-height: 1;
     }
-    
+
     .price span {
         font-size: 16px;
         color: #6b7280;
         font-weight: 500;
     }
-    
+
     .gst {
         margin-top: 8px;
         color: #6b7280;
@@ -213,7 +212,7 @@
         display: inline-block;
         border: 1px solid #eef2f7;
     }
-    
+
     /* ===== FEATURES LIST ===== */
     .features {
         list-style: none;
@@ -224,7 +223,7 @@
         overflow-x: hidden;
         padding-right: 8px;
     }
-    
+
     .features li {
         padding: 12px 0;
         border-bottom: 1px solid #f1f3f5;
@@ -235,16 +234,16 @@
         align-items: center;
         transition: all 0.3s ease;
     }
-    
+
     .features li:hover {
         color: #111827;
         transform: translateX(4px);
     }
-    
+
     .features li:last-child {
         border-bottom: none;
     }
-    
+
     .features li i {
         color: #10b981;
         margin-right: 12px;
@@ -259,7 +258,7 @@
         justify-content: center;
         flex-shrink: 0;
     }
-    
+
     /* ===== BUTTON ===== */
     .btn-plan {
         width: 100%;
@@ -279,45 +278,45 @@
         box-shadow: 0 4px 20px rgba(102, 126, 234, 0.25);
         letter-spacing: 0.3px;
     }
-    
+
     .btn-plan:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 35px rgba(102, 126, 234, 0.35);
         color: #ffffff !important;
         text-decoration: none;
     }
-    
+
     .btn-plan:active {
         transform: scale(0.98);
     }
-    
+
     .btn-plan.current {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
         cursor: default;
     }
-    
+
     .btn-plan.current:hover {
         transform: none;
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
     }
-    
+
     /* ===== BADGE POPULAR ===== */
     .badge-popular {
-        position: absolute;
-        top: 18px;
-        right: -42px;
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: #fff;
-        padding: 6px 50px;
-        transform: rotate(45deg);
+        /* position: absolute; */
+        /* top: 18px; */
+        /* right: -42px; */
+        /* background: linear-gradient(135deg, #f59e0b, #d97706); */
+        /* color: #fff; */
+        padding: 5px 10px;
+        /* transform: rotate(45deg); */
         font-size: 11px;
         font-weight: 700;
-        text-transform: uppercase;
+        /* text-transform: uppercase; */
         letter-spacing: 0.5px;
-        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        /* box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3); */
     }
-    
+
     /* ===== CURRENT PLAN BADGE ===== */
     .current-plan-badge {
         background: linear-gradient(135deg, #10b981, #059669);
@@ -331,14 +330,14 @@
         letter-spacing: 0.3px;
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
     }
-    
+
     /* ===== CURRENT PLAN CARD ===== */
     .current-plan {
         border: 2px solid #10b981 !important;
         background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
         position: relative;
     }
-    
+
     .current-plan::before {
         content: '';
         position: absolute;
@@ -349,25 +348,25 @@
         background: linear-gradient(90deg, #10b981 0%, #34d399 100%) !important;
         opacity: 1 !important;
     }
-    
+
     .current-plan .btn-plan {
         background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
     }
-    
+
     .current-plan .btn-plan:hover {
         transform: none;
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.25);
     }
-    
+
     .current-plan .plan-name {
         color: #065f46;
     }
-    
+
     .current-plan .price {
         color: #065f46;
     }
-    
+
     /* ===== PACKAGE META GRID ===== */
     .package-meta {
         display: grid;
@@ -375,7 +374,7 @@
         gap: 10px;
         margin-bottom: 25px;
     }
-    
+
     .meta-item {
         background: #f8fafc;
         border-radius: 12px;
@@ -386,13 +385,13 @@
         border: 1px solid #eef2f7;
         transition: all 0.3s ease;
     }
-    
+
     .meta-item:hover {
         border-color: #667eea;
         background: #f0f3ff;
         transform: translateY(-2px);
     }
-    
+
     .meta-icon {
         width: 34px;
         height: 34px;
@@ -405,7 +404,7 @@
         color: #4f46e5;
         flex-shrink: 0;
     }
-    
+
     .meta-title {
         font-size: 11px;
         color: #94a3b8;
@@ -414,33 +413,33 @@
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
-    
+
     .meta-value {
         font-size: 13px;
         font-weight: 700;
         color: #111827;
         line-height: 1.2;
     }
-    
+
     /* ===== SCROLLBAR ===== */
     .features::-webkit-scrollbar {
         width: 5px;
     }
-    
+
     .features::-webkit-scrollbar-track {
         background: #f3f4f6;
         border-radius: 20px;
     }
-    
+
     .features::-webkit-scrollbar-thumb {
         background: #cbd5e1;
         border-radius: 20px;
     }
-    
+
     .features::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
     }
-    
+
     /* ===== LOADER ===== */
     #pageLoader {
         position: fixed;
@@ -455,7 +454,7 @@
         justify-content: center;
         align-items: center;
     }
-    
+
     .loader-spinner {
         width: 50px;
         height: 50px;
@@ -464,303 +463,303 @@
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
     }
-    
+
     @keyframes spin {
         100% {
             transform: rotate(360deg);
         }
     }
-    
+
     /* ============================================
        RESPONSIVE
        ============================================ */
-    
+
     @media screen and (max-width: 992px) {
         .section-title h2 {
             font-size: 30px;
         }
-    
+
         .card-plan {
             padding: 28px 22px;
         }
-    
+
         .plan-name {
             font-size: 26px;
         }
-    
+
         .price {
             font-size: 42px;
         }
-    
+
         .features {
             height: 180px;
         }
     }
-    
+
     @media screen and (max-width: 768px) {
         .main-contant {
             max-width: 100%;
             padding: 15px;
             border-radius: 16px;
         }
-    
+
         .section-title h2 {
             font-size: 26px;
         }
-    
+
         .section-title p {
             font-size: 14px;
         }
-    
+
         .card-plan {
             padding: 24px 18px;
             border-radius: 18px;
         }
-    
+
         .plan-name {
             font-size: 24px;
         }
-    
+
         .price {
             font-size: 36px;
         }
-    
+
         .price span {
             font-size: 14px;
         }
-    
+
         .features li {
             font-size: 13px;
             padding: 10px 0;
         }
-    
+
         .features {
             height: 160px;
         }
-    
+
         .btn-plan {
             font-size: 14px;
             padding: 12px 16px;
         }
-    
+
         .current-plan-box {
             padding: 18px 20px !important;
             border-radius: 12px !important;
         }
-    
+
         .current-plan-box h5 {
             font-size: 16px;
         }
-    
+
         .current-plan-box p {
             font-size: 14px;
         }
-    
+
         .current-plan-box strong {
             font-size: 14px;
             padding: 4px 14px;
         }
-    
+
         .package-meta {
             gap: 8px;
         }
-    
+
         .meta-item {
             padding: 8px 10px;
         }
-    
+
         .meta-value {
             font-size: 12px;
         }
-    
+
         .badge-popular {
             font-size: 9px;
             padding: 4px 35px;
             top: 14px;
             right: -35px;
         }
-    
+
         .row.g-4.justify-content-center {
             padding: 0 10px;
         }
     }
-    
+
     @media screen and (max-width: 576px) {
         .main-contant {
             padding: 10px;
             border-radius: 12px;
         }
-    
+
         .section-title {
             padding: 20px 0 10px 0;
         }
-    
+
         .section-title h2 {
             font-size: 22px;
         }
-    
+
         .section-title p {
             font-size: 13px;
         }
-    
+
         .card-plan {
             padding: 20px 14px;
             border-radius: 14px;
         }
-    
+
         .plan-name {
             font-size: 20px;
         }
-    
+
         .plan-duration {
             font-size: 12px;
             padding: 3px 12px;
         }
-    
+
         .price {
             font-size: 30px;
             margin-top: 10px;
         }
-    
+
         .price span {
             font-size: 12px;
         }
-    
+
         .gst {
             font-size: 11px;
             padding: 3px 12px;
         }
-    
+
         .features {
             height: 140px;
             margin: 20px 0;
             padding-right: 4px;
         }
-    
+
         .features li {
             font-size: 12px;
             padding: 8px 0;
         }
-    
+
         .features li i {
             font-size: 12px;
             width: 20px;
             height: 20px;
             margin-right: 8px;
         }
-    
+
         .btn-plan {
             font-size: 13px;
             padding: 10px 14px;
             border-radius: 10px;
         }
-    
+
         .current-plan-box {
             padding: 14px 16px !important;
             margin-bottom: 20px !important;
         }
-    
+
         .current-plan-box h5 {
             font-size: 14px;
         }
-    
+
         .current-plan-box p {
             font-size: 13px;
         }
-    
+
         .current-plan-box strong {
             font-size: 12px;
             padding: 4px 12px;
         }
-    
+
         .current-plan-box::before {
             font-size: 32px;
             right: 10px;
         }
-    
+
         .package-meta {
             grid-template-columns: 1fr 1fr;
             gap: 6px;
             margin-bottom: 18px;
         }
-    
+
         .meta-item {
             padding: 6px 8px;
             border-radius: 8px;
             gap: 6px;
         }
-    
+
         .meta-icon {
             width: 28px;
             height: 28px;
             font-size: 12px;
         }
-    
+
         .meta-title {
             font-size: 9px;
         }
-    
+
         .meta-value {
             font-size: 11px;
         }
-    
+
         .badge-popular {
             font-size: 8px;
             padding: 3px 28px;
             top: 12px;
             right: -30px;
         }
-    
+
         .current-plan-badge {
             font-size: 10px;
             padding: 4px 12px;
         }
-    
+
         .row.g-4.justify-content-center {
             padding: 0 5px;
         }
     }
-    
+
     @media screen and (max-width: 400px) {
         .card-plan {
             padding: 16px 12px;
         }
-    
+
         .plan-name {
             font-size: 18px;
         }
-    
+
         .price {
             font-size: 26px;
         }
-    
+
         .features li {
             font-size: 11px;
             padding: 6px 0;
         }
-    
+
         .btn-plan {
             font-size: 12px;
             padding: 8px 12px;
         }
-    
+
         .current-plan-box {
             padding: 12px 14px !important;
         }
-    
+
         .current-plan-box h5 {
             font-size: 13px;
         }
-    
+
         .current-plan-box p {
             font-size: 12px;
         }
-    
+
         .current-plan-box strong {
             font-size: 11px;
             padding: 3px 10px;
         }
-    
+
         .package-meta {
             grid-template-columns: 1fr;
             gap: 4px;
@@ -831,7 +830,7 @@
 
                         <?php
 
-                        $features = explode("\n", $package->key_points);
+                        $features = json_decode($package->key_points, true);
 
                         $is_current = (
                             !empty($current_subscription)
@@ -883,23 +882,137 @@
 
                                 </div>
 
-                                <div class="price">
 
-                                    ₹<?= number_format($package->price) ?>
 
-                                    <span>
-                                        / <?= $package->duration_type ?>
-                                    </span>
+                                <?php
+                                /*
+    |--------------------------------------------------------------------------
+    | Free Subscription Display
+    |--------------------------------------------------------------------------
+    */
 
-                                </div>
+                                $show_free = (
+                                    !empty($package->free_available)
+                                    ||
+                                    !empty($package->free_unlimited)
+                                );
 
-                                <div class="gst">
+                                $show_free_remaining = (
+                                    !empty($package->free_available)
+                                    &&
+                                    empty($package->free_unlimited)
+                                    &&
+                                    $package->free_remaining > 0
+                                );
+                                ?>
 
-                                    ₹<?= number_format($total_amount) ?>
+                                <?php if ($show_free) { ?>
 
-                                    including <?= $package->gst_percent ?>% GST
+                                    <div class="price">
 
-                                </div>
+                                        <span style="
+            text-decoration: line-through;
+            font-size: 20px;
+            color: #9ca3af;
+            margin-right: 8px;
+        ">
+                                            ₹<?= number_format($package->price) ?>
+                                        </span>
+
+                                        <span style="
+            font-size: 32px;
+            font-weight: 800;
+            color: #16a34a;
+        ">
+                                            FREE
+                                        </span>
+
+                                    </div>
+
+                                    <div class="gst" style="
+        color: #16a34a;
+        font-weight: 600;
+    ">
+
+                                        Free subscription
+                                        <?php if ($package->free_unlimited) { ?>
+
+                                            · Unlimited free allocations
+
+                                        <?php } ?>
+
+                                    </div>
+
+                                    <?php if ($show_free_remaining) { ?>
+
+                                        <div style="
+            margin-top: 6px;
+            font-size: 12px;
+            color: #dc2626;
+            font-weight: 600;
+        ">
+
+                                            <?= $package->free_remaining ?>
+                                            free slot<?= $package->free_remaining > 1 ? 's' : '' ?>
+                                            remaining
+
+                                        </div>
+
+                                    <?php } ?>
+
+                                <?php } else { ?>
+
+                                    <div class="price">
+
+                                        ₹<?= number_format($package->price) ?>
+
+                                        <span>
+                                            / <?= $package->duration_type ?>
+                                        </span>
+
+                                    </div>
+
+                                    <div class="gst">
+
+                                        ₹<?= number_format($total_amount) ?>
+
+                                        including <?= $package->gst_percent ?>% GST
+
+                                    </div>
+
+                                    <?php if (!empty($package->free_already_used)) { ?>
+
+                                        <div style="
+                                                margin-top: 6px;
+                                                font-size: 12px;
+                                                color: #6b7280;
+                                                font-weight: 500;
+                                            ">
+
+                                            Free allocation already used
+
+                                        </div>
+
+                                    <?php } elseif (
+                                        (int)$package->free_user_limit > 0
+                                        &&
+                                        (int)$package->free_remaining === 0
+                                    ) { ?>
+
+                                        <div style="
+                                                margin-top: 6px;
+                                                font-size: 12px;
+                                                color: #dc2626;
+                                                font-weight: 600;
+                                            ">
+
+                                            Free quota exhausted
+
+                                        </div>
+
+                                    <?php } ?>
+
+                                <?php } ?>
 
                                 <?php if ($is_current) { ?>
 
@@ -1035,11 +1148,8 @@
                                     <?php if (!empty(trim($feature))) { ?>
 
                                         <li>
-
                                             <i class="bi bi-check-circle-fill"></i>
-
-                                            <?= trim($feature) ?>
-
+                                            <?= htmlspecialchars(trim($feature)) ?>
                                         </li>
 
                                     <?php } ?>
@@ -1047,8 +1157,6 @@
                                 <?php } ?>
 
                             </ul>
-
-
 
                             <?php if ($is_current) { ?>
 
@@ -1063,11 +1171,23 @@
                                 <a href="<?= base_url('purchase-package/' . $package->id) ?>"
                                     class="btn btn-plan choosePlanBtn"
                                     style="
-                                      background: <?= $package->package_color ?>;
-                                      color:#fff;
-                                   ">
+                                        background: <?= $package->package_color ?>;
+                                        color:#fff;
+                                    ">
 
-                                    Choose Plan
+                                    <?php if (
+                                        !empty($package->free_available)
+                                        ||
+                                        !empty($package->free_unlimited)
+                                    ) { ?>
+
+                                        Get Free Plan
+
+                                    <?php } else { ?>
+
+                                        Choose Plan
+
+                                    <?php } ?>
 
                                 </a>
 

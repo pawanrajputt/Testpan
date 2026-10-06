@@ -2166,194 +2166,381 @@
         });
     });
 </script>
+
 <script>
     $(document).ready(function() {
-                // Function to generate a new lab block dynamically
-                function getProfileLabHTML(labCount) {
-                    return `
+
+        // ============================================================
+        // Generate New Lab HTML
+        // ============================================================
+        function getProfileLabHTML(labCount) {
+
+            return `
             <div class="mt-3 newLabWrapperChange">
-                <span class="bg-dark text-white p-2 rounded-top lab-number">Lab number ${labCount}</span>
+
+                <span class="bg-dark text-white p-2 rounded-top lab-number">
+                    Lab number ${labCount}
+                </span>
+
                 <div class="lab-details-wrapper p-4 rounded bg-white mt-2">
-                    <p><label>Floor number</label>
-                        <select class="form-control form-select" name="floor_number[]">
+
+                    <!-- Floor Number -->
+                    <p>
+                        <label>Floor number</label>
+
+                        <select
+                            class="form-control form-select floor-number"
+                            name="floor_number[]"
+                        >
                             <option value="basement">Basement</option>
                             <option value="0">Ground</option>
-                            ${Array.from({length: 30}, (_, i) => ` < option value = "${i+1}" > $ {
-                        i + 1
-                    } < /option>`).join("")} < /
-                    select > <
-                        /p> <
-                    p > < label > Total number of computers ? < /label> <
-                    input type = "number"
-                    name = "no_of_computer[]"
-                    class = "form-control"
-                    min = "0" >
-                        <
-                        /p> <
-                    p > < label > System Processor < /label> <
-                    select name = "window_generation[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "Core 2 Duo" > Core 2 Duo < /option> <
-                    option value = "i3" > i3 < /option> <
-                    option value = "i5" > i5 < /option> <
-                    option value = "i7" > i7 < /option> < /
-                    select > <
-                        /p> <
-                    p > < label > Monitor type < /label> <
-                    select name = "monitor_type[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "LCD" > LCD < /option> <
-                    option value = "LED" > LED < /option> < /
-                    select > <
-                        /p> <
-                    p > < label > Operating system < /label> <
-                    select name = "operating_system[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "Win 7" > Win 7 < /option> <
-                    option value = "Win 8" > Win 8 < /option> <
-                    option value = "Win 10" > Win 10 < /option> <
-                    option value = "Win 11" > Win 11 < /option> <
-                    option value = "Linux" > Linux < /option> <
-                    option value = "MacOS" > MacOS < /option> < /
-                    select > <
-                        /p> <
-                    p > < label > RAM(in GB) < /label> <
-                    select name = "ram[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "2GB" > 2 GB < /option> <
-                    option value = "4GB" > 4 GB < /option> <
-                    option value = "8GB" > 8 GB < /option> <
-                    option value = "16GB" > 16 GB < /option> <
-                    option value = "32GB" > 32 GB < /option> < /
-                    select > <
-                        /p> <
-                    p > < label > Hard Disk Drive Capacity in GB < /label> <
-                    select name = "hard_disk[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "80GB" > 80 GB < /option> <
-                    option value = "128GB" > 128 GB < /option> <
-                    option value = "160GB" > 160 GB < /option> <
-                    option value = "256GB" > 256 GB < /option> <
-                    option value = "320GB" > 320 GB < /option> <
-                    option value = "500GB" > 500 GB < /option> <
-                    option value = "1TB" > 1 TB < /option> <
-                    option value = "1.5TB" > 1.5 TB < /option> <
-                    option value = "2TB" > 2 TB < /option> <
-                    option value = "4TB" > 4 TB < /option> < /
-                    select > <
-                        /p> <
-                    p > < label > Ethernet Switch’ s company < /label> <
-                    select name = "ehternet_swtch_company[]"
-                    class = "form-select ethernet-company" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "Cisco" > Cisco < /option> <
-                    option value = "Netgear" > Netgear < /option> <
-                    option value = "D-Link" > D - Link < /option> <
-                    option value = "TP-Link" > TP - Link < /option> <
-                    option value = "Dex" > Dex < /option> <
-                    option value = "other" > Other < /option> < /
-                    select >
+                        </select>
+                    </p>
 
-                        <
-                        input type = "text"
-                    name = "ethernet_company_other[]"
-                    class = "form-control mt-2 ethernet-other-input"
-                    placeholder = "Enter Ethernet Switch Company"
-                    style = "display:none;" >
-                        <
-                        /p> <
-                    p > < label > Switch’ s Category < /label> <
-                    select name = "switch_category[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "unmanaged" > unmanaged < /option> <
-                    option value = "smart" > smart < /option> <
-                    option value = "managedL2" > managed L2 < /option> <
-                    option value = "managedL3" > managed L3 < /option> < /
-                    select > <
-                        /p> <
-                    p > < label > No.of ports of each Ethernet
-                    switch ? < /label> <
-                    select name = "no_of_port_eth_switch[]"
-                    class = "form-select" >
-                    <
-                    option value = "" > Select < /option> <
-                    option value = "8" > 8 < /option> <
-                    option value = "16" > 16 < /option> <
-                    option value = "24" > 24 < /option> <
-                    option value = "48" > 48 < /option> < /
-                    select > <
-                        /p> <
-                    div class = "saveBtnWrapper" >
-                    <
-                    button type = "button"
-                    class = "btn btn-outline-danger profile-delete-btn" > Delete < /button> < /
-                    div > <
-                        /div> < /
-                    div > `;
+
+                    <!-- Total Computers -->
+                    <p>
+                        <label>Total number of computers?</label>
+
+                        <input
+                            type="number"
+                            name="no_of_computer[]"
+                            class="form-control"
+                            min="0"
+                        >
+                    </p>
+
+
+                    <!-- System Processor -->
+                    <p>
+                        <label>System Processor</label>
+
+                        <select
+                            name="window_generation[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="Core 2 Duo">Core 2 Duo</option>
+                            <option value="i3">i3</option>
+                            <option value="i5">i5</option>
+                            <option value="i7">i7</option>
+                        </select>
+                    </p>
+
+
+                    <!-- Monitor Type -->
+                    <p>
+                        <label>Monitor type</label>
+
+                        <select
+                            name="monitor_type[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="LCD">LCD</option>
+                            <option value="LED">LED</option>
+                        </select>
+                    </p>
+
+
+                    <!-- Operating System -->
+                    <p>
+                        <label>Operating system</label>
+
+                        <select
+                            name="operating_system[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="Win 7">Win 7</option>
+                            <option value="Win 8">Win 8</option>
+                            <option value="Win 10">Win 10</option>
+                            <option value="Win 11">Win 11</option>
+                            <option value="Linux">Linux</option>
+                            <option value="MacOS">MacOS</option>
+                        </select>
+                    </p>
+
+
+                    <!-- RAM -->
+                    <p>
+                        <label>RAM (in GB)</label>
+
+                        <select
+                            name="ram[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="2GB">2 GB</option>
+                            <option value="4GB">4 GB</option>
+                            <option value="8GB">8 GB</option>
+                            <option value="16GB">16 GB</option>
+                            <option value="32GB">32 GB</option>
+                        </select>
+                    </p>
+
+
+                    <!-- Hard Disk -->
+                    <p>
+                        <label>Hard Disk Drive Capacity in GB</label>
+
+                        <select
+                            name="hard_disk[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="80GB">80 GB</option>
+                            <option value="128GB">128 GB</option>
+                            <option value="160GB">160 GB</option>
+                            <option value="256GB">256 GB</option>
+                            <option value="320GB">320 GB</option>
+                            <option value="500GB">500 GB</option>
+                            <option value="1TB">1 TB</option>
+                            <option value="1.5TB">1.5 TB</option>
+                            <option value="2TB">2 TB</option>
+                            <option value="4TB">4 TB</option>
+                        </select>
+                    </p>
+
+
+                    <!-- Ethernet Switch Company -->
+                    <p>
+                        <label>Ethernet Switch's company</label>
+
+                        <select
+                            name="ehternet_swtch_company[]"
+                            class="form-select ethernet-company"
+                        >
+                            <option value="">Select</option>
+                            <option value="Cisco">Cisco</option>
+                            <option value="Netgear">Netgear</option>
+                            <option value="D-Link">D-Link</option>
+                            <option value="TP-Link">TP-Link</option>
+                            <option value="Dex">Dex</option>
+                            <option value="other">Other</option>
+                        </select>
+
+                        <input
+                            type="text"
+                            name="ethernet_company_other[]"
+                            class="form-control mt-2 ethernet-other-input"
+                            placeholder="Enter Ethernet Switch Company"
+                            style="display:none;"
+                        >
+                    </p>
+
+
+                    <!-- Switch Category -->
+                    <p>
+                        <label>Switch's Category</label>
+
+                        <select
+                            name="switch_category[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="unmanaged">unmanaged</option>
+                            <option value="smart">smart</option>
+                            <option value="managedL2">managed L2</option>
+                            <option value="managedL3">managed L3</option>
+                        </select>
+                    </p>
+
+
+                    <!-- Number of Ethernet Switch Ports -->
+                    <p>
+                        <label>
+                            No. of ports of each Ethernet switch?
+                        </label>
+
+                        <select
+                            name="no_of_port_eth_switch[]"
+                            class="form-select"
+                        >
+                            <option value="">Select</option>
+                            <option value="8">8</option>
+                            <option value="16">16</option>
+                            <option value="24">24</option>
+                            <option value="48">48</option>
+                        </select>
+                    </p>
+
+
+                    <!-- Delete Button -->
+                    <div class="saveBtnWrapper">
+
+                        <button
+                            type="button"
+                            class="btn btn-outline-danger profile-delete-btn"
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+
+                </div>
+            </div>
+        `;
         }
 
-        // 🔹 Update lab numbering + input count
+
+        // ============================================================
+        // Append Floor Options 1 - 30
+        // ============================================================
+        function appendFloorOptions($lab) {
+
+            let $floorSelect = $lab.find(".floor-number");
+
+            // Basement and Ground are already present.
+            // Add floors 1 to 30.
+            for (let floor = 1; floor <= 30; floor++) {
+
+                $floorSelect.append(
+                    $("<option>", {
+                        value: floor,
+                        text: floor
+                    })
+                );
+
+            }
+        }
+
+
+        // ============================================================
+        // Create + Append New Lab
+        // ============================================================
+        function appendProfileLab(labCount) {
+
+            // Generate lab HTML
+            let $newLab = $(getProfileLabHTML(labCount));
+
+            // Add floor options
+            appendFloorOptions($newLab);
+
+            // Append lab to container
+            $("#profileLabContainerHtml").append($newLab);
+        }
+
+
+        // ============================================================
+        // Update Lab Numbering + Total Lab Count
+        // ============================================================
         function updateProfileLabNumbers() {
+
             $("#profileLabContainerHtml .newLabWrapperChange").each(function(index) {
-                $(this).find(".lab-number").text("Lab number " + (index + 1));
+
+                $(this)
+                    .find(".lab-number")
+                    .text("Lab number " + (index + 1));
+
             });
+
 
             $("#edit_total_number_of_lab").val(
                 $("#profileLabContainerHtml .newLabWrapperChange").length
             );
         }
 
+
+        // ============================================================
+        // Add New Lab Button
+        // ============================================================
         $("#profileAddLabBtn").on("click", function() {
-            let count = $("#profileLabContainerHtml .newLabWrapperChange").length + 1;
-            $("#profileLabContainerHtml").append(getProfileLabHTML(count));
+
+            let count =
+                $("#profileLabContainerHtml .newLabWrapperChange").length + 1;
+
+            appendProfileLab(count);
+
             updateProfileLabNumbers();
         });
 
-        // 🔹 When total labs input changes
-        $("#edit_total_number_of_lab").on("change keyup", function() {
-            let requiredLabs = parseInt($(this).val()) || 0;
-            let currentLabs = $("#profileLabContainerHtml .newLabWrapperChange").length;
 
-            // ➕ Add labs
+        // ============================================================
+        // Total Number Of Labs Change
+        // ============================================================
+        $("#edit_total_number_of_lab").on("change keyup", function() {
+
+            let requiredLabs = parseInt($(this).val()) || 0;
+
+            let currentLabs =
+                $("#profileLabContainerHtml .newLabWrapperChange").length;
+
+
+            // --------------------------------------------------------
+            // Add Labs
+            // --------------------------------------------------------
             if (requiredLabs > currentLabs) {
-                for (let i = currentLabs + 1; i <= requiredLabs; i++) {
-                    $("#profileLabContainerHtml").append(getProfileLabHTML(i));
+
+                for (
+                    let i = currentLabs + 1; i <= requiredLabs; i++
+                ) {
+
+                    appendProfileLab(i);
                 }
             }
 
-            // ➖ Remove labs
+
+            // --------------------------------------------------------
+            // Remove Labs
+            // --------------------------------------------------------
             if (requiredLabs < currentLabs) {
+
                 $("#profileLabContainerHtml .newLabWrapperChange")
                     .slice(requiredLabs)
                     .remove();
             }
 
+
             updateProfileLabNumbers();
         });
 
-        // 🔹 Delete lab button
+
+        // ============================================================
+        // Delete Lab
+        // ============================================================
         $(document).on("click", ".profile-delete-btn", function() {
-            $(this).closest(".newLabWrapperChange").remove();
+
+            $(this)
+                .closest(".newLabWrapperChange")
+                .remove();
+
             updateProfileLabNumbers();
         });
 
-        // 🔹 Initial sync (for edit page)
+
+        // ============================================================
+        // Ethernet Company - Other
+        // ============================================================
+        $(document).on("change", ".ethernet-company", function() {
+
+            let $otherInput = $(this)
+                .closest("p")
+                .find(".ethernet-other-input");
+
+
+            if ($(this).val() === "other") {
+
+                $otherInput.show();
+
+            } else {
+
+                $otherInput
+                    .hide()
+                    .val("");
+
+            }
+        });
+
+
+        // ============================================================
+        // Initial Sync For Edit Page
+        // ============================================================
         $("#edit_total_number_of_lab").trigger("change");
+
     });
 </script>
+
 <script>
     $(document).on('change', '.ethernet-company', function() {
 

@@ -240,8 +240,8 @@
                                 toastr.success(response.message);
 
                                 setTimeout(function () {
-                                    window.location.href = base_url;
-                                }, 3000);
+                                    window.location.href = base_url + 'logout';
+                                }, 2000);
 
                             } else {
                                 toastr.error(response.message);

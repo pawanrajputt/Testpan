@@ -528,8 +528,6 @@ class AuthController extends CI_Controller
         $images = $this->Common_model->getdata_array('tt_center_images', ['center_id' => $center_id, 'deleted' => 0]);
         $number_of_seats = $this->Common_model->get_total_booked_seat('tt_send_booking_request', $center_id);
 
-
-
         $totalBookingRequest =
             $this->Common_model
             ->get_total_booking_request(
@@ -569,6 +567,13 @@ class AuthController extends CI_Controller
                 $cityId
             );
 
+
+        $this->addProjectStatusText($totalBookingRequest);
+        $this->addProjectStatusText($totalInReviewBooking);
+        $this->addProjectStatusText($totalConfirmBooking);
+        $this->addProjectStatusText($totalRejectBooking);
+        $this->addProjectStatusText($totalPostponedBooking);
+
         $selfBookingData = $this->Common_model->get_client_self_booking($center_id, '', '');
 
         // Calendar data
@@ -602,6 +607,15 @@ class AuthController extends CI_Controller
                 'exam_dates'                    => $exam_dates
             ]
         ]);
+    }
+
+    private function addProjectStatusText(&$data)
+    {
+        foreach ($data as &$row) {
+            $row['status_text'] = getProjectStatusText($row);
+        }
+
+        unset($row);
     }
 
 

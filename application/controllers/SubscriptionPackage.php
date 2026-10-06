@@ -55,10 +55,10 @@ class SubscriptionPackage extends MY_Controller
         $owner_id = $this->session->userdata('owner_id');
 
         /*
-        |--------------------------------------------------------------------------
-        | Get Active Packages
-        |--------------------------------------------------------------------------
-        */
+    |--------------------------------------------------------------------------
+    | Get Active Packages
+    |--------------------------------------------------------------------------
+    */
 
         $packages = $this->db
             ->where('status', 1)
@@ -67,26 +67,201 @@ class SubscriptionPackage extends MY_Controller
             ->result();
 
         /*
+    |--------------------------------------------------------------------------
+    | Get Free Allocation Count Package Wise
+    |--------------------------------------------------------------------------
+    |
+    | This avoids running a COUNT query for every package.
+    |
+    */
+
+        $free_allocations = $this->db
+            ->select('package_id, COUNT(*) as used_count')
+            ->from('subscription_free_allocations')
+            ->group_by('package_id')
+            ->get()
+            ->result();
+
+        $free_used_map = [];
+
+        foreach ($free_allocations as $allocation) {
+
+            $free_used_map[$allocation->package_id]
+                = (int)$allocation->used_count;
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Check Packages Already Consumed By Current Owner
+    |--------------------------------------------------------------------------
+    */
+
+        $owner_free_allocations = $this->db
+            ->select('package_id')
+            ->where('center_owner_id', $owner_id)
+            ->get('subscription_free_allocations')
+            ->result();
+
+        $owner_free_package_map = [];
+
+        foreach ($owner_free_allocations as $allocation) {
+
+            $owner_free_package_map[$allocation->package_id] = true;
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Prepare Free Subscription Information
+    |--------------------------------------------------------------------------
+    */
+
+        foreach ($packages as &$package) {
+
+            $limit = (int)$package->free_user_limit;
+
+            $used = $free_used_map[$package->id] ?? 0;
+
+            /*
         |--------------------------------------------------------------------------
-        | Current Subscription
+        | Default Values
         |--------------------------------------------------------------------------
         */
+
+            $package->free_used = $used;
+
+            $package->free_remaining = 0;
+
+            $package->free_available = false;
+
+            $package->free_unlimited = false;
+
+            $package->free_already_used = false;
+
+            /*
+        |--------------------------------------------------------------------------
+        | -1 = Unlimited Free Users
+        |--------------------------------------------------------------------------
+        */
+
+            if ($limit === -1) {
+
+                $package->free_unlimited = true;
+
+                /*
+            | Owner can still only consume one free allocation.
+            */
+
+                if (
+                    !isset(
+                        $owner_free_package_map[$package->id]
+                    )
+                ) {
+
+                    $package->free_available = true;
+                }
+
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | 0 = No Free Users
+        |--------------------------------------------------------------------------
+        */
+
+            if ($limit <= 0) {
+
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Remaining Free Slots
+        |--------------------------------------------------------------------------
+        */
+
+            $remaining = max(
+                0,
+                $limit - $used
+            );
+
+            $package->free_remaining = $remaining;
+
+            /*
+        |--------------------------------------------------------------------------
+        | Owner Has Already Used Free Slot
+        |--------------------------------------------------------------------------
+        */
+
+            if (
+                isset(
+                    $owner_free_package_map[$package->id]
+                )
+            ) {
+
+                $package->free_already_used = true;
+
+                continue;
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Free Slot Available
+        |--------------------------------------------------------------------------
+        */
+
+            if ($remaining > 0) {
+
+                $package->free_available = true;
+            }
+        }
+
+        unset($package);
+
+        /*
+    |--------------------------------------------------------------------------
+    | Current Subscription
+    |--------------------------------------------------------------------------
+    */
 
         $current_subscription = $this->db
             ->where('center_owner_id', $owner_id)
             ->where('status', 'active')
-            ->where('expiry_date >=', date('Y-m-d H:i:s'))
+            ->where(
+                'expiry_date >=',
+                date('Y-m-d H:i:s')
+            )
             ->order_by('id', 'DESC')
             ->get('user_subscriptions')
             ->row();
 
-        $data['packages'] = $packages;
-        $data['current_subscription'] = $current_subscription;
+        /*
+    |--------------------------------------------------------------------------
+    | Send Data To View
+    |--------------------------------------------------------------------------
+    */
 
-        $this->load->view('auth/owner/layouts/header');
-        $this->load->view('auth/owner/layouts/sidebar');
-        $this->load->view('auth/owner/subscription/plans', $data);
-        $this->load->view('auth/owner/layouts/footer');
+        $data['packages'] = $packages;
+
+        $data['current_subscription']
+            = $current_subscription;
+
+        $this->load->view(
+            'auth/owner/layouts/header'
+        );
+
+        $this->load->view(
+            'auth/owner/layouts/sidebar'
+        );
+
+        $this->load->view(
+            'auth/owner/subscription/plans',
+            $data
+        );
+
+        $this->load->view(
+            'auth/owner/layouts/footer'
+        );
     }
 
 
@@ -154,6 +329,352 @@ class SubscriptionPackage extends MY_Controller
         );
     }
 
+    // Helper code
+    /**
+     * Check whether owner is eligible for a free subscription
+     * for the selected package.
+     */
+    private function getFreeSubscriptionEligibility($package_id, $owner_id)
+    {
+        /*
+    |--------------------------------------------------------------------------
+    | Get package with row lock
+    |--------------------------------------------------------------------------
+    |
+    | IMPORTANT:
+    | This method should be called inside a DB transaction.
+    | FOR UPDATE prevents two owners from consuming the same last slot.
+    |
+    */
+
+        $package = $this->db
+            ->query(
+                "SELECT *
+             FROM subscription_packages
+             WHERE id = ?
+             AND status = 1
+             FOR UPDATE",
+                [$package_id]
+            )
+            ->row();
+
+        if (empty($package)) {
+            return [
+                'eligible' => false,
+                'package'  => null
+            ];
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Check whether this owner has already consumed free allocation
+    |--------------------------------------------------------------------------
+    */
+
+        $alreadyAllocated = $this->db
+            ->where('package_id', $package_id)
+            ->where('center_owner_id', $owner_id)
+            ->get('subscription_free_allocations')
+            ->row();
+
+        if ($alreadyAllocated) {
+            return [
+                'eligible' => false,
+                'package'  => $package
+            ];
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | -1 = Unlimited Free Users
+    |--------------------------------------------------------------------------
+    */
+
+        if ((int)$package->free_user_limit === -1) {
+
+            return [
+                'eligible' => true,
+                'package'  => $package
+            ];
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | 0 = No Free Users
+    |--------------------------------------------------------------------------
+    */
+
+        if ((int)$package->free_user_limit <= 0) {
+
+            return [
+                'eligible' => false,
+                'package'  => $package
+            ];
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Count consumed free slots
+    |--------------------------------------------------------------------------
+    */
+
+        $freeUsed = $this->db
+            ->where('package_id', $package_id)
+            ->count_all_results('subscription_free_allocations');
+
+        /*
+    |--------------------------------------------------------------------------
+    | Check remaining quota
+    |--------------------------------------------------------------------------
+    */
+
+        if ($freeUsed < (int)$package->free_user_limit) {
+
+            return [
+                'eligible' => true,
+                'package'  => $package
+            ];
+        }
+
+        return [
+            'eligible' => false,
+            'package'  => $package
+        ];
+    }
+
+    // Free Transaction
+    /**
+     * Create a FREE subscription for an owner.
+     *
+     * This does NOT involve MMADPay.
+     * An internal transaction is created for proper audit/history.
+     */
+    private function createFreeSubscription($owner_id, $package)
+    {
+        /*
+    |--------------------------------------------------------------------------
+    | Calculate Dates
+    |--------------------------------------------------------------------------
+    */
+
+        $start_date = date('Y-m-d H:i:s');
+
+        if ($package->duration_type == 'month') {
+
+            $expiry_date = date(
+                'Y-m-d H:i:s',
+                strtotime('+' . (int)$package->duration . ' months')
+            );
+        } else {
+
+            $expiry_date = date(
+                'Y-m-d H:i:s',
+                strtotime('+' . (int)$package->duration . ' years')
+            );
+        }
+
+        /*
+    |--------------------------------------------------------------------------
+    | Create Internal FREE Transaction
+    |--------------------------------------------------------------------------
+    |
+    | This is NOT a payment gateway transaction.
+    | It simply keeps transaction_id/history consistent.
+    |
+    */
+
+        $order_id = 'FREE' . date('YmdHis') . random_int(1000, 9999);
+
+        $transaction_data = [
+
+            'center_owner_id'
+            => $owner_id,
+
+            'package_id'
+            => $package->id,
+
+            'order_id'
+            => $order_id,
+
+            'payment_id'
+            => null,
+
+            'gateway_transaction_id'
+            => null,
+
+            'bank_refno'
+            => null,
+
+            'payment_gateway'
+            => 'FREE',
+
+            'amount'
+            => 0,
+
+            'gst_amount'
+            => 0,
+
+            'total_amount'
+            => 0,
+
+            'payment_response'
+            => null,
+
+            'callback_response'
+            => null,
+
+            'package_snapshot'
+            => json_encode($package),
+
+            'payment_status'
+            => 'success',
+
+            'status_code'
+            => '0',
+
+            'txn_status'
+            => 'SUCCESS',
+
+            'transaction_status_message'
+            => 'Free Subscription',
+
+            'created_at'
+            => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->insert(
+            'subscription_transactions',
+            $transaction_data
+        );
+
+        $transaction_id = $this->db->insert_id();
+
+        if (!$transaction_id) {
+
+            throw new Exception(
+                'Unable to create free subscription transaction.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Expire Existing Active Subscription
+        |--------------------------------------------------------------------------
+        */
+
+        $this->db
+            ->where('center_owner_id', $owner_id)
+            ->where('is_active', 1)
+            ->update(
+                'user_subscriptions',
+                [
+                    'is_active' => 0,
+                    'status'    => 'expired'
+                ]
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Create Subscription
+        |--------------------------------------------------------------------------
+        */
+
+        $subscription_data = [
+
+            'center_owner_id'
+            => $owner_id,
+
+            'package_id'
+            => $package->id,
+
+            'transaction_id'
+            => $transaction_id,
+
+            'subscription_type'
+            => 'free',
+
+            'amount'
+            => 0,
+
+            'gst_amount'
+            => 0,
+
+            'total_amount'
+            => 0,
+
+            'start_date'
+            => $start_date,
+
+            'expiry_date'
+            => $expiry_date,
+
+            'is_active'
+            => 1,
+
+            'status'
+            => 'active',
+
+            'payment_status'
+            => 'success',
+
+            'purchased_package_snapshot'
+            => json_encode($package),
+
+            'created_at'
+            => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->insert(
+            'user_subscriptions',
+            $subscription_data
+        );
+
+        $subscription_id = $this->db->insert_id();
+
+        if (!$subscription_id) {
+
+            throw new Exception(
+                'Unable to create free subscription.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Record Free Allocation
+        |--------------------------------------------------------------------------
+        */
+
+        $allocation_data = [
+
+            'package_id'
+            => $package->id,
+
+            'center_owner_id'
+            => $owner_id,
+
+            'subscription_id'
+            => $subscription_id,
+
+            'allocated_at'
+            => date('Y-m-d H:i:s')
+        ];
+
+        $this->db->insert(
+            'subscription_free_allocations',
+            $allocation_data
+        );
+
+        if ($this->db->affected_rows() <= 0) {
+
+            throw new Exception(
+                'Unable to reserve free subscription slot.'
+            );
+        }
+
+        return $subscription_id;
+    }
+
+    // Purchase Subscription
     public function purchasePackage($package_id)
     {
         if (!$this->session->userdata('is_owner_logged_in')) {
@@ -174,236 +695,384 @@ class SubscriptionPackage extends MY_Controller
             ->get('tt_admin_users')
             ->row();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Package
-        |--------------------------------------------------------------------------
-        */
+        if (empty($owner)) {
 
-        $package = $this->db
-            ->where('id', $package_id)
-            ->where('status', 1)
-            ->get('subscription_packages')
-            ->row();
-
-        if (empty($package)) {
-
-            show_error('Invalid Package');
+            show_error('Owner not found');
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Amount Calculation
+        | Start Transaction
         |--------------------------------------------------------------------------
         */
 
-        $amount = $package->price;
+        $this->db->trans_begin();
 
-        $gst_amount = (
-            $amount * $package->gst_percent
-        ) / 100;
+        try {
 
-        $total_amount = $amount + $gst_amount;
-
-        /*
+            /*
         |--------------------------------------------------------------------------
-        | Order ID
+        | Check Free Eligibility
+        |--------------------------------------------------------------------------
+        |
+        | This locks the package row so concurrent users cannot
+        | consume the same final free slot.
+        |
+        */
+
+            $freeCheck = $this->getFreeSubscriptionEligibility(
+                $package_id,
+                $owner_id
+            );
+
+            if (empty($freeCheck['package'])) {
+
+                throw new Exception('Invalid Package');
+            }
+
+            $package = $freeCheck['package'];
+
+            /*
+        |--------------------------------------------------------------------------
+        | FREE SUBSCRIPTION
         |--------------------------------------------------------------------------
         */
 
-        $order_id = 'TRN' . time();
+            if ($freeCheck['eligible'] === true) {
 
-        /*
+                /*
+            |--------------------------------------------------------------------------
+            | Create Free Subscription
+            |--------------------------------------------------------------------------
+            */
+
+                $subscription_id = $this->createFreeSubscription(
+                    $owner_id,
+                    $package
+                );
+
+                /*
+            |--------------------------------------------------------------------------
+            | Commit
+            |--------------------------------------------------------------------------
+            */
+
+                $this->db->trans_commit();
+
+                $this->session->set_flashdata(
+                    'success',
+                    'Free Subscription Activated Successfully'
+                );
+
+                redirect('subscription-plans');
+            }
+
+            /*
         |--------------------------------------------------------------------------
-        | Payload
+        | PAID SUBSCRIPTION
+        |--------------------------------------------------------------------------
+        |
+        | Free quota is unavailable.
+        | Continue with existing MMADPay flow.
+        |
+        */
+
+            $amount = (float)$package->price;
+
+            $gst_amount = (
+                $amount * (float)$package->gst_percent
+            ) / 100;
+
+            $total_amount = $amount + $gst_amount;
+
+            /*
+        |--------------------------------------------------------------------------
+        | Unique Order ID
         |--------------------------------------------------------------------------
         */
 
-        $payload = [
+            $order_id =
+                'TRN' .
+                date('YmdHis') .
+                random_int(1000, 9999);
 
-            'merchant_txnid'
-            => $order_id,
+            /*
+        |--------------------------------------------------------------------------
+        | MMADPay Payload
+        |--------------------------------------------------------------------------
+        */
 
-            'customer_name'   => !empty($owner->name) ? $owner->name : 'Test User',
+            $payload = [
 
-            'customer_mobile' => !empty($owner->mobile) ? $owner->mobile : '9876543210',
+                'merchant_txnid'
+                => $order_id,
 
-            'customer_email'
-            => $owner->email,
+                'customer_name'
+                => !empty($owner->name)
+                    ? $owner->name
+                    : 'Test User',
 
-            'amount'
-            => number_format($total_amount, 2, '.', ''),
+                'customer_mobile'
+                => !empty($owner->mobile)
+                    ? $owner->mobile
+                    : '9876543210',
 
-            'pay_mode'
-            => 'CARD',
+                'customer_email'
+                => $owner->email,
 
-            'return_url'
-            => base_url('payment-success'),
+                'amount'
+                => number_format(
+                    $total_amount,
+                    2,
+                    '.',
+                    ''
+                ),
 
-            'remark'
-            => 'Subscription Payment',
+                'pay_mode'
+                => 'CARD',
 
+                'return_url'
+                => base_url('payment-success'),
 
+                'remark'
+                => 'Subscription Payment'
+            ];
 
-        ];
-
-        /*
+            /*
         |--------------------------------------------------------------------------
         | Hash
         |--------------------------------------------------------------------------
         */
 
-        $payload['hash']
-            = $this->generateHash($payload);
+            $payload['hash'] =
+                $this->generateHash($payload);
 
-        /*
+            /*
         |--------------------------------------------------------------------------
         | Store Pending Transaction
         |--------------------------------------------------------------------------
         */
 
-        $transaction_data = [
+            $transaction_data = [
 
-            'center_owner_id'
-            => $owner_id,
+                'center_owner_id'
+                => $owner_id,
 
-            'package_id'
-            => $package->id,
+                'package_id'
+                => $package->id,
 
-            'order_id'
-            => $order_id,
+                'order_id'
+                => $order_id,
 
-            'payment_gateway'
-            => 'MMADPAY',
+                'payment_gateway'
+                => 'MMADPAY',
 
-            'amount'
-            => $amount,
+                'amount'
+                => $amount,
 
-            'gst_amount'
-            => $gst_amount,
+                'gst_amount'
+                => $gst_amount,
 
-            'total_amount'
-            => $total_amount,
+                'total_amount'
+                => $total_amount,
 
-            'payment_status'
-            => 'pending',
+                'payment_status'
+                => 'pending',
 
-            'txn_status'
-            => 'PENDING',
+                'txn_status'
+                => 'PENDING',
 
-            'transaction_status_message'
-            => 'Payment Initiated',
+                'transaction_status_message'
+                => 'Payment Initiated',
 
-            'package_snapshot'
-            => json_encode($package),
+                'package_snapshot'
+                => json_encode($package),
 
-            'created_at'
-            => date('Y-m-d H:i:s')
+                'created_at'
+                => date('Y-m-d H:i:s')
+            ];
 
-        ];
+            $this->db->insert(
+                'subscription_transactions',
+                $transaction_data
+            );
 
-        $this->db->insert(
-            'subscription_transactions',
-            $transaction_data
-        );
-
-        /*
+            /*
         |--------------------------------------------------------------------------
-        | JWT
-        |--------------------------------------------------------------------------
-        */
-
-        $payment_config = $this->config->item('mmadpay');
-
-        $jwt = $this->generateJWT();
-
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $jwt
-        ];
-
-        $ch = curl_init();
-
-        curl_setopt_array($ch, [
-            CURLOPT_URL => $payment_config['create_order_url'],
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($payload),
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_TIMEOUT => 60,
-            CURLOPT_CONNECTTIMEOUT => 60,
-            CURLOPT_HTTPHEADER => $headers
-        ]);
-
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-
-        curl_close($ch);
-
-        if ($error) {
-            die($error);
-        }
-
-        $response_data = json_decode($response, true);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Save Response
+        | Commit before external API call
         |--------------------------------------------------------------------------
         */
 
-        $this->db
-            ->where('order_id', $order_id)
-            ->update('subscription_transactions', [
+            $this->db->trans_commit();
 
-                'payment_response'
-                => $response,
+            /*
+        |--------------------------------------------------------------------------
+        | MMADPay Configuration
+        |--------------------------------------------------------------------------
+        */
 
-                'gateway_transaction_id'
-                => $response_data['data']['gateway_txnid']
-                    ?? null
+            $payment_config =
+                $this->config->item('mmadpay');
 
+            $jwt = $this->generateJWT();
+
+            $headers = [
+                'Content-Type: application/json',
+                'Authorization: Bearer ' . $jwt
+            ];
+
+            $ch = curl_init();
+
+            curl_setopt_array($ch, [
+
+                CURLOPT_URL
+                => $payment_config['create_order_url'],
+
+                CURLOPT_RETURNTRANSFER
+                => true,
+
+                CURLOPT_POST
+                => true,
+
+                CURLOPT_POSTFIELDS
+                => json_encode($payload),
+
+                CURLOPT_SSL_VERIFYPEER
+                => false,
+
+                CURLOPT_SSL_VERIFYHOST
+                => false,
+
+                CURLOPT_TIMEOUT
+                => 60,
+
+                CURLOPT_CONNECTTIMEOUT
+                => 60,
+
+                CURLOPT_HTTPHEADER
+                => $headers
             ]);
 
-        /*
+            $response = curl_exec($ch);
+
+            $error = curl_error($ch);
+
+            curl_close($ch);
+
+            /*
         |--------------------------------------------------------------------------
-        | Redirect To Payment URL
+        | Gateway Error
         |--------------------------------------------------------------------------
         */
 
-        if (
-            isset($response_data['respCode'])
-            &&
-            $response_data['respCode'] == '0'
-        ) {
+            if ($error) {
 
-            redirect(
-                $response_data['data']['payment_link']
-            );
-        } else {
+                $this->db
+                    ->where('order_id', $order_id)
+                    ->update(
+                        'subscription_transactions',
+                        [
+                            'payment_status' => 'failed',
+                            'txn_status' => 'FAILED',
+                            'transaction_status_message'
+                            => $error
+                        ]
+                    );
+
+                $this->session->set_flashdata(
+                    'error',
+                    'Unable to initiate payment.'
+                );
+
+                redirect('subscription-plans');
+            }
+
+            $response_data =
+                json_decode($response, true);
+
+            /*
+        |--------------------------------------------------------------------------
+        | Save Gateway Response
+        |--------------------------------------------------------------------------
+        */
+
+            $this->db
+                ->where('order_id', $order_id)
+                ->update(
+                    'subscription_transactions',
+                    [
+
+                        'payment_response'
+                        => $response,
+
+                        'gateway_transaction_id'
+                        => $response_data['data']['gateway_txnid']
+                            ?? null
+                    ]
+                );
+
+            /*
+        |--------------------------------------------------------------------------
+        | Payment Link
+        |--------------------------------------------------------------------------
+        */
+
+            if (
+                isset($response_data['respCode'])
+                &&
+                $response_data['respCode'] == '0'
+            ) {
+
+                redirect(
+                    $response_data['data']['payment_link']
+                );
+            }
+
+            /*
+        |--------------------------------------------------------------------------
+        | Payment Initiation Failed
+        |--------------------------------------------------------------------------
+        */
+
+            $this->db
+                ->where('order_id', $order_id)
+                ->update(
+                    'subscription_transactions',
+                    [
+
+                        'payment_status'
+                        => 'failed',
+
+                        'txn_status'
+                        => 'FAILED',
+
+                        'transaction_status_message'
+                        => 'Unable to initiate payment'
+                    ]
+                );
 
             $this->session->set_flashdata(
                 'error',
                 'Unable to initiate payment'
             );
 
-            echo "<pre>";
-            print_r($response);
-            print_r($response_data);
-            die();
-
             redirect('subscription-plans');
+        } catch (Exception $e) {
+
+            $this->db->trans_rollback();
+            $this->session->set_flashdata(
+                'error',
+                'Error: ' . $e->getMessage()
+            );
         }
     }
-
 
     public function paymentSuccess()
     {
         $encodedData = $this->input->post('DATA');
 
         if (empty($encodedData)) {
+
             show_error('Invalid payment response');
         }
 
@@ -416,32 +1085,12 @@ class SubscriptionPackage extends MY_Controller
             empty($decodedData) ||
             empty($decodedData['merchant_txnid'])
         ) {
+
             show_error('Invalid transaction');
         }
 
-        $merchantTxnId = $decodedData['merchant_txnid'];
-
-        // ==========
-        $transaction = $this->db
-            ->where('order_id', $merchantTxnId)
-            ->get('subscription_transactions')
-            ->row();
-
-        if (!$transaction) {
-            show_error('Transaction not found');
-        }
-
-        $owner = $this->db
-            ->where('id', $transaction->center_owner_id)
-            ->get('tt_admin_users')
-            ->row();
-
-        $this->session->set_userdata([
-            'owner_id' => $owner->id,
-            'is_owner_logged_in' => true
-        ]);
-
-        //   ==============
+        $merchantTxnId =
+            $decodedData['merchant_txnid'];
 
         /*
         |--------------------------------------------------------------------------
@@ -455,7 +1104,63 @@ class SubscriptionPackage extends MY_Controller
             ->row();
 
         if (empty($transaction)) {
+
             show_error('Transaction not found');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Restore Owner Session
+        |--------------------------------------------------------------------------
+        */
+
+        $owner = $this->db
+            ->where('id', $transaction->center_owner_id)
+            ->get('tt_admin_users')
+            ->row();
+
+        if (!empty($owner)) {
+
+            $this->session->set_userdata([
+                'owner_id' =>
+                $owner->id,
+
+                'is_owner_logged_in' =>
+                true
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Already Processed
+        |--------------------------------------------------------------------------
+        */
+
+        $existingSubscription = $this->db
+            ->where(
+                'transaction_id',
+                $transaction->id
+            )
+            ->get('user_subscriptions')
+            ->row();
+
+        if ($existingSubscription) {
+
+            if ($existingSubscription->is_active == 1) {
+
+                $this->session->set_flashdata(
+                    'success',
+                    'Subscription Already Activated'
+                );
+            } else {
+
+                $this->session->set_flashdata(
+                    'error',
+                    'Subscription already processed.'
+                );
+            }
+
+            redirect('subscription-plans');
         }
 
         /*
@@ -467,76 +1172,82 @@ class SubscriptionPackage extends MY_Controller
         if (
             !isset($decodedData['status_code']) ||
             $decodedData['status_code'] != '0' ||
+            !isset($decodedData['txn_status']) ||
             strtolower($decodedData['txn_status']) != 'success'
         ) {
 
             $this->db
                 ->where('id', $transaction->id)
-                ->update('subscription_transactions', [
+                ->update(
+                    'subscription_transactions',
+                    [
 
-                    'payment_status' => 'failed',
+                        'payment_status'
+                        => 'failed',
 
-                    'txn_status' => 'FAILED',
+                        'status_code'
+                        => $decodedData['status_code']
+                            ?? null,
 
-                    'gateway_transaction_id'
-                    => $decodedData['gateway_txnid'] ?? null,
+                        'txn_status'
+                        => 'FAILED',
 
-                    'transaction_status_message'
-                    => $decodedData['message'] ?? 'Payment Failed',
+                        'gateway_transaction_id'
+                        => $decodedData['gateway_txnid']
+                            ?? $transaction->gateway_transaction_id,
 
-                    'payment_response'
-                    => json_encode($decodedData)
+                        'transaction_status_message'
+                        => $decodedData['message']
+                            ?? 'Payment Failed',
 
-                ]);
+                        'callback_response'
+                        => json_encode($decodedData),
+
+                        'payment_response'
+                        => json_encode($decodedData)
+                    ]
+                );
 
             redirect('payment-failed');
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Update Transaction Success
+        | Update Successful Transaction
         |--------------------------------------------------------------------------
         */
 
         $this->db
             ->where('id', $transaction->id)
-            ->update('subscription_transactions', [
+            ->update(
+                'subscription_transactions',
+                [
 
-                'payment_status' => 'success',
+                    'payment_status'
+                    => 'success',
 
-                'txn_status' => 'SUCCESS',
+                    'status_code'
+                    => $decodedData['status_code']
+                        ?? '0',
 
-                'gateway_transaction_id'
-                => $decodedData['gateway_txnid'] ?? null,
+                    'txn_status'
+                    => 'SUCCESS',
 
-                'transaction_status_message'
-                => $decodedData['message'] ?? 'Payment Successful',
+                    'gateway_transaction_id'
+                    => $decodedData['gateway_txnid']
+                        ?? $transaction->gateway_transaction_id,
 
-                'payment_response'
-                => json_encode($decodedData)
+                    'transaction_status_message'
+                    => $decodedData['message']
+                        ?? 'Payment Successful',
 
-            ]);
+                    'callback_response'
+                    => json_encode($decodedData),
 
-        /*
-        |--------------------------------------------------------------------------
-        | Prevent Duplicate Subscription
-        |--------------------------------------------------------------------------
-        */
-
-        $existingSubscription = $this->db
-            ->where('transaction_id', $transaction->id)
-            ->get('user_subscriptions')
-            ->row();
-
-        if ($existingSubscription) {
-
-            $this->session->set_flashdata(
-                'success',
-                'Subscription Already Activated'
+                    'payment_response'
+                    => json_encode($decodedData)
+                ]
             );
-
-            redirect('subscription-plans');
-        }
 
         /*
         |--------------------------------------------------------------------------
@@ -548,25 +1259,41 @@ class SubscriptionPackage extends MY_Controller
             $transaction->package_snapshot
         );
 
+        if (empty($package)) {
+
+            show_error(
+                'Package information not found.'
+            );
+        }
+
         /*
         |--------------------------------------------------------------------------
-        | Calculate Expiry
+        | Calculate Subscription Dates
         |--------------------------------------------------------------------------
         */
 
-        $start_date = date('Y-m-d H:i:s');
+        $start_date =
+            date('Y-m-d H:i:s');
 
         if ($package->duration_type == 'month') {
 
             $expiry_date = date(
                 'Y-m-d H:i:s',
-                strtotime('+' . $package->duration . ' months')
+                strtotime(
+                    '+' .
+                        (int)$package->duration .
+                        ' months'
+                )
             );
         } else {
 
             $expiry_date = date(
                 'Y-m-d H:i:s',
-                strtotime('+' . $package->duration . ' years')
+                strtotime(
+                    '+' .
+                        (int)$package->duration .
+                        ' years'
+                )
             );
         }
 
@@ -581,17 +1308,20 @@ class SubscriptionPackage extends MY_Controller
                 'center_owner_id',
                 $transaction->center_owner_id
             )
-            ->update('user_subscriptions', [
+            ->where('is_active', 1)
+            ->update(
+                'user_subscriptions',
+                [
 
-                'is_active' => 0,
+                    'is_active' => 0,
 
-                'status' => 'expired'
-
-            ]);
+                    'status' => 'expired'
+                ]
+            );
 
         /*
         |--------------------------------------------------------------------------
-        | Create New Subscription
+        | Create Paid Subscription
         |--------------------------------------------------------------------------
         */
 
@@ -638,13 +1368,18 @@ class SubscriptionPackage extends MY_Controller
 
             'created_at'
             => date('Y-m-d H:i:s')
-
         ];
 
         $this->db->insert(
             'user_subscriptions',
             $subscription_data
         );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Success
+        |--------------------------------------------------------------------------
+        */
 
         $this->session->set_flashdata(
             'success',
@@ -663,7 +1398,6 @@ class SubscriptionPackage extends MY_Controller
 
         redirect('subscription-plans');
     }
-
 
     public function subscriptionHistory()
     {

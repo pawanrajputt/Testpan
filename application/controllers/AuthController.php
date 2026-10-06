@@ -577,7 +577,6 @@ class AuthController extends MY_Controller
     }
 
 
-
     public function storeMpin()
     {
         $mpin = $this->input->post('mpin');
@@ -657,7 +656,6 @@ class AuthController extends MY_Controller
             'message' => 'MPIN created successfully'
         ]);
     }
-
 
 
     public function login()
@@ -765,10 +763,6 @@ class AuthController extends MY_Controller
         $this->db->order_by('c.created_on', 'DESC');
         $query = $this->db->get();
         $centers = $query->result_array();
-
-        // if (empty($centers)) {
-        //     show_error('No centers found for this owner.');
-        // }
 
         $data['centers'] = $centers;
 
@@ -1505,6 +1499,7 @@ class AuthController extends MY_Controller
 
         $centerExists = $this->db
             ->where('owner_user_id', $owner_user_id)
+            ->where('deleted', 0)
             ->limit(1)
             ->count_all_results('tt_center') > 0;
 
@@ -1530,4 +1525,5 @@ class AuthController extends MY_Controller
             'id'        => $owner_user_id
         ]);
     }
+    
 }
